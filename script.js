@@ -1027,11 +1027,15 @@ const pdfCoordinates = {
     // COORDONNÉES POUR ATTESTATION SIGNATAIRE
     attestation_signataire: {
         page1: {
-            residence_nom: { x: 90, y: 505, size: 11, color: PDFColors.BLACK },
-            adresse_batiment: { x: 200, y: 504, size: 11, color: PDFColors.BLACK },
-            numero_immatriculation: { x: 250, y: 490, size: 11, color: PDFColors.BLACK },
-            date_fait: { x: 146, y: 385, size: 12, color: PDFColors.BLACK }
+            residence_nom: { x: 85, y: 503, size: 11, color: PDFColors.BLACK },
+            adresse_batiment: { x: 100, y: 490, size: 11, color: PDFColors.BLACK },
+            numero_immatriculation: { x: 253, y: 477, size: 11, color: PDFColors.BLACK },
+            date_fait: { x: 155, y: 385, size: 10, color: PDFColors.BLACK }
         }
+
+
+
+
     },
     // COORDONNÉES POUR L'ATTESTATION DE RÉALISATION
     attestation_realisation: {

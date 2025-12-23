@@ -1259,8 +1259,8 @@ async function generateMyhousePdf(formData, type) {
     });
     
     const myhousePdfMap = {
-        attestation_signataire: "PDFS/attestation_signataire.pdf",
-        attestation_realisation: "PDFS/attestation_realisation.pdf",
+        attestation_signataire: "PDFS/myhouse_attestation_signataire.pdf",
+        attestation_realisation: "PDFS/myhouse_attestation_realisation.pdf",
         devis: "PDFS/myhouse_devis.pdf",
         facture: "PDFS/myhouse_facture.pdf",
         cdc: "PDFS/myhouse_cdc.pdf",
@@ -1444,9 +1444,9 @@ const myhousePdfCoordinates = {
     },
      attestation_signataire: {
         page1: {
-            nom_residence: { x: 198, y: 521, size: 10, color: 'black', bold: true }, // REMPLACER PDFColors.BLACK
+            nom_residence: { x: 194, y: 520.5, size: 10, color: 'black', bold: true }, // REMPLACER PDFColors.BLACK
             adresse_travaux: { x: 88, y: 507, size: 10, color: 'black', bold: true }, // REMPLACER PDFColors.BLACK
-            numero_immatriculation: { x: 228, y: 492, size: 10, color: 'black', bold: true }, // REMPLACER PDFColors.BLACK
+            numero_immatriculation: { x: 228, y: 493, size: 9, color: 'black', bold: true }, // REMPLACER PDFColors.BLACK
             date_signature: { x: 170, y: 375, size: 8, color: 'black', bold: true } // REMPLACER PDFColors.BLACK
         }
     },
