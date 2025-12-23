@@ -1408,3 +1408,60 @@ async function generateAttestationRealisation() {
         alert("❌ Erreur lors de la génération de l'attestation.");
     }
 }
+
+// Dès le chargement de la page
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log("🔄 Préchargement des templates...");
+  
+  // Précharger uniquement les templates nécessaires
+  const essentialTemplates = [
+    'PDFS/devis.pdf',
+    'PDFS/facture.pdf'
+  ];
+  
+  // Charger en arrière-plan sans bloquer
+  essentialTemplates.forEach(template => {
+    fetch(template, { priority: 'low' })
+      .then(res => res.arrayBuffer())
+      .then(buffer => {
+        pdfCache.set(template, buffer);
+        console.log(`✅ Préchargé: ${template}`);
+      })
+      .catch(err => console.warn(`⚠️ ${template}: ${err.message}`));
+  });
+});
+
+
+// TOP de votre script.js
+const pdfCache = new Map();
+
+async function getPdfTemplate(path) {
+  // Vérifier le cache d'abord
+  if (pdfCache.has(path)) {
+    console.log("📦 Utilisation cache pour", path);
+    return pdfCache.get(path);
+  }
+  
+  console.time(`Chargement ${path}`);
+  
+  // Version optimisée pour GitHub Pages
+  const response = await fetch(`${path}?v=1.0`, { // Versionnage
+    cache: 'force-cache', // Force la mise en cache
+    headers: {
+      'Accept-Encoding': 'gzip' // Demande la compression
+    }
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Template non trouvé: ${response.status}`);
+  }
+  
+  const arrayBuffer = await response.arrayBuffer();
+  console.timeEnd(`Chargement ${path}`);
+  console.log(`📊 Taille: ${(arrayBuffer.byteLength / 1024 / 1024).toFixed(2)} Mo`);
+  
+  // Mettre en cache
+  pdfCache.set(path, arrayBuffer);
+  
+  return arrayBuffer;
+}

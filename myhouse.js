@@ -1240,7 +1240,6 @@ async function generateMyhouseCdc() {
 }
 
 
-
 async function generateMyhousePdf(formData, type) {
     // OPTIMISATION : Validation préalable
     if (!formData || typeof formData !== 'object') {
@@ -1252,23 +1251,21 @@ async function generateMyhousePdf(formData, type) {
     // Valider les dates
     Object.keys(formData).forEach(key => {
         if (key.includes('date') && formData[key]) {
-            // Vérifier que la date n'est pas en 5256 (erreur dans vos logs)
             const year = formData[key].split('-')[0];
             if (year && parseInt(year) > 2100) {
                 console.warn(`⚠️ Date suspecte détectée pour ${key}: ${formData[key]}`);
-                // Corriger automatiquement ou demander à l'utilisateur
             }
         }
     });
     
     const myhousePdfMap = {
-    attestation_signataire: "PDFS/attestation_signataire.pdf",
-    attestation_realisation: "PDFS/attestation_realisation.pdf",
-    devis: "PDFS/myhouse_devis.pdf",
-    facture: "PDFS/myhouse_facture.pdf",
-    cdc: "PDFS/myhouse_cdc.pdf",
-    rapport: "PDFS/myhouse_rapport.pdf"
-};
+        attestation_signataire: "PDFS/attestation_signataire.pdf",
+        attestation_realisation: "PDFS/attestation_realisation.pdf",
+        devis: "PDFS/myhouse_devis.pdf",
+        facture: "PDFS/myhouse_facture.pdf",
+        cdc: "PDFS/myhouse_cdc.pdf",
+        rapport: "PDFS/myhouse_rapport.pdf"
+    };
 
     if (!myhousePdfMap[type]) {
         alert("Type de document MYHOUSE non supporté.");
@@ -1276,9 +1273,11 @@ async function generateMyhousePdf(formData, type) {
     }
 
     try {
+        console.time(`Génération PDF MYHOUSE ${type}`); // AJOUTER ICI
+        
         const existingPdf = await fetch(myhousePdfMap[type]).then(res => res.arrayBuffer());
         const { PDFDocument, StandardFonts, rgb } = PDFLib;
-        const pdfDoc = await PDFDocument.load(existingPdf); // Déclaré ici
+        const pdfDoc = await PDFDocument.load(existingPdf);
         const pages = pdfDoc.getPages();
 
         const fontNormal = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -1299,7 +1298,7 @@ async function generateMyhousePdf(formData, type) {
             
             if (coords[pageKey]) {
                 Object.entries(coords[pageKey]).forEach(([fieldName, coord]) => {
-                 let value = getFieldValue(fieldName, formData);
+                    let value = getFieldValue(fieldName, formData);
                     
                     if (fieldName.includes("date")) {
                         value = formatDateFR(value);
@@ -1315,10 +1314,16 @@ async function generateMyhousePdf(formData, type) {
                                 break;
                             case 'dark_green':
                                 color = rgb(0, 0.4, 0.2);
-                                case 'olive_green':
-                                color = rgb(0.45, 0.50, 0.19);  // Vert olive foncé comme "Reste à payer"
                                 break;
-                            
+                            case 'olive_green':
+                                color = rgb(0.45, 0.50, 0.19);
+                                break;
+                            case 'light_blue':
+                                color = rgb(0.4, 0.7, 1); // AJOUTER pour prime_cee_cdc
+                                break;
+                            case 'red':
+                                color = rgb(1, 0, 0); // AJOUTER pour date_cdc
+                                break;
                             case 'black':
                             default:
                                 color = rgb(0, 0, 0);
@@ -1340,8 +1345,6 @@ async function generateMyhousePdf(formData, type) {
                     }
                 });
             }
-            
-          
         });
 
         const pdfBytes = await pdfDoc.save();
@@ -1354,15 +1357,16 @@ async function generateMyhousePdf(formData, type) {
         link.click();
         
         console.log(`✅ MYHOUSE ${type.toUpperCase()} généré: ${fileName}`);
+        console.timeEnd(`Génération PDF MYHOUSE ${type}`); // AJOUTER ICI
         return true;
 
     } catch (error) {
         console.error("❌ Erreur PDF MYHOUSE:", error);
+        console.timeEnd(`Génération PDF MYHOUSE ${type}`); // AJOUTER ICI (même en cas d'erreur)
         alert(`❌ Erreur lors de la génération du document MYHOUSE ${type}.`);
         throw error;
     }
 }
-
 const myhousePdfCoordinates = {
     devis: {
         page1: {
@@ -1438,13 +1442,12 @@ const myhousePdfCoordinates = {
             total_ttc: { x: 526, y: 135, size: 8, color: 'black', bold: true },
         }
     },
-    attestation_signataire: {
+     attestation_signataire: {
         page1: {
-            nom_residence: { x: 198, y: 521, size: 10, color: PDFColors.BLACK, bold: true },
-            adresse_travaux: { x: 88, y: 507, size: 10, color: PDFColors.BLACK, bold: true },
-            numero_immatriculation: { x: 228, y: 492, size: 10, color: PDFColors.BLACK, bold: true },
-            date_signature: { x: 170, y: 375, size: 8, color: PDFColors.BLACK, bold: true }
-            
+            nom_residence: { x: 198, y: 521, size: 10, color: 'black', bold: true }, // REMPLACER PDFColors.BLACK
+            adresse_travaux: { x: 88, y: 507, size: 10, color: 'black', bold: true }, // REMPLACER PDFColors.BLACK
+            numero_immatriculation: { x: 228, y: 492, size: 10, color: 'black', bold: true }, // REMPLACER PDFColors.BLACK
+            date_signature: { x: 170, y: 375, size: 8, color: 'black', bold: true } // REMPLACER PDFColors.BLACK
         }
     },
      attestation_realisation: {
@@ -1541,16 +1544,5 @@ async function generateMyhouseFromDynamicForm(type) {
     await generateMyhouseDocument(type);
 }
 
-async function generateMyhousePdf(formData, type) {
-    try {
-        console.time(`Génération PDF MYHOUSE ${type}`);
-        
-        // ... votre code existant ...
-        
-        console.timeEnd(`Génération PDF MYHOUSE ${type}`);
-        
-    } catch (error) {
-        console.timeEnd(`Génération PDF MYHOUSE ${type}`);
-        throw error;
-    }
-}
+
+
