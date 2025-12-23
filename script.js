@@ -1428,4 +1428,51 @@ async function generateAttestationRealisation() {
 }
 window.addEventListener("beforeunload", (event) => {
     event.preventDefault();
+});// Dans votre fonction de génération
+async function loadResourceWithTimeout(url, timeout = 5000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.warn(`Timeout sur ${url} - utilisation alternative`);
+    return null;
+  }
+}
+
+
+async function generateMyhouseFromDynamicForm(type) {
+    await generateMyhouseDocument(type);
+}
+window.addEventListener("beforeunload", (event) => {
+    event.preventDefault();
 });
+
+// Dans votre fonction de génération
+async function loadResourceWithTimeout(url, timeout = 5000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.warn(`Timeout sur ${url} - utilisation alternative`);
+    return null;
+  }
+}
+
+// Utilisation
+const templateResponse = await loadResourceWithTimeout('templates/myhouse.pdf', 3000);
+if (templateResponse) {
+  const templateBytes = await templateResponse.arrayBuffer();
+} else {
+  // Créer un PDF de base sans template
+  const pdfDoc = await PDFDocument.create();
+}
