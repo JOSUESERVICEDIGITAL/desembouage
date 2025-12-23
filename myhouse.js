@@ -285,19 +285,6 @@ const myhouseFileForms = {
     ]
 };
 
-const input = document.createElement("input");
-input.name = field.name;
-input.id = field.name; // ajoute un id unique
-input.required = field.required || false;
-if (field.type) input.type = field.type;
-if (field.readonly) input.readOnly = true;
-
-const label = document.createElement("label");
-label.htmlFor = field.name; // relie le label à l'input
-label.textContent = field.label;
-
-container.appendChild(label);
-container.appendChild(input);
 
 
 function loadMyhouseForm(type) {
@@ -1678,6 +1665,3 @@ document.addEventListener('DOMContentLoaded', function() {
 async function generateMyhouseFromDynamicForm(type) {
     await generateMyhouseDocument(type);
 }
-window.addEventListener("beforeunload", (event) => {
-    event.preventDefault();
-});
