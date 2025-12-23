@@ -241,11 +241,9 @@ const fileForms = {
         { name: "adresse_travaux_2", label: "Adresse des travaux (2) - Facultatif", required: false },
         { name: "boite_postale_2", label: "Boîte postale + Zone (2) - Facultatif", required: false }
     ]
-
-
-
     
 };
+
 const input = document.createElement("input");
 input.name = field.name;
 input.id = field.name; // ajoute un id unique
@@ -1425,54 +1423,4 @@ async function generateAttestationRealisation() {
         console.error("Erreur attestation:", error);
         alert("❌ Erreur lors de la génération de l'attestation.");
     }
-}
-window.addEventListener("beforeunload", (event) => {
-    event.preventDefault();
-});// Dans votre fonction de génération
-async function loadResourceWithTimeout(url, timeout = 5000) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-  
-  try {
-    const response = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    console.warn(`Timeout sur ${url} - utilisation alternative`);
-    return null;
-  }
-}
-
-
-async function generateMyhouseFromDynamicForm(type) {
-    await generateMyhouseDocument(type);
-}
-window.addEventListener("beforeunload", (event) => {
-    event.preventDefault();
-});
-
-// Dans votre fonction de génération
-async function loadResourceWithTimeout(url, timeout = 5000) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-  
-  try {
-    const response = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    console.warn(`Timeout sur ${url} - utilisation alternative`);
-    return null;
-  }
-}
-
-// Utilisation
-const templateResponse = await loadResourceWithTimeout('templates/myhouse.pdf', 3000);
-if (templateResponse) {
-  const templateBytes = await templateResponse.arrayBuffer();
-} else {
-  // Créer un PDF de base sans template
-  const pdfDoc = await PDFDocument.create();
 }
