@@ -1173,13 +1173,13 @@ async function generatePdfWithPdfLib(formData, type = null) {
     }
 
     const pdfMap = {
-        attestation_signataire: "/pdfs/attestation_signataire.pdf",
-        attestation_realisation: "/pdfs/attestation_realisation.pdf",
-        devis: "/pdfs/devis.pdf",
-        facture: "/pdfs/facture.pdf",
-        cdc: "/pdfs/cdc.pdf",
-        rapport: "/pdfs/rapport.pdf"
-    };
+    attestation_signataire: "PDFS/attestation_signataire.pdf",
+    attestation_realisation: "PDFS/attestation_realisation.pdf",
+    devis: "PDFS/devis.pdf",
+    facture: "PDFS/facture.pdf",
+    cdc: "PDFS/cdc.pdf",
+    rapport: "PDFS/rapport.pdf"
+};
 
     if (!pdfMap[selectedType]) {
         alert("Type de document non supporté.");

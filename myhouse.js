@@ -1283,13 +1283,13 @@ async function generateMyhouseCdc() {
 
 async function generateMyhousePdf(formData, type) {
     const myhousePdfMap = {
-        attestation_signataire: "/pdfs/myhouse_attestation_signataire.pdf",
-        attestation_realisation: "/pdfs/myhouse_attestation_realisation.pdf",
-        devis: "/pdfs/myhouse_devis.pdf",
-        facture: "/pdfs/myhouse_facture.pdf",
-        cdc: "/pdfs/myhouse_cdc.pdf",
-        rapport: "/pdfs/myhouse_rapport.pdf"
-    };
+    attestation_signataire: "PDFS/attestation_signataire.pdf",
+    attestation_realisation: "PDFS/attestation_realisation.pdf",
+    devis: "PDFS/myhouse_devis.pdf",
+    facture: "PDFS/myhouse_facture.pdf",
+    cdc: "PDFS/myhouse_cdc.pdf",
+    rapport: "PDFS/myhouse_rapport.pdf"
+};
 
     if (!myhousePdfMap[type]) {
         alert("Type de document MYHOUSE non supporté.");
