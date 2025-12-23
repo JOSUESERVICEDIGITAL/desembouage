@@ -1,4 +1,3 @@
-const DEBUG_GRID = true;
 
 let selectedDossier = '';
 let selectedFileType = '';

@@ -1,4 +1,14 @@
 function getFieldValue(fieldName, formData) {
+    // OPTIMISATION : Utiliser un cache pour éviter les recherches répétées
+    if (!window.myhouseFieldCache) {
+        window.myhouseFieldCache = new Map();
+    }
+    
+    const cacheKey = `${fieldName}_${JSON.stringify(formData)}`;
+    if (window.myhouseFieldCache.has(cacheKey)) {
+        return window.myhouseFieldCache.get(cacheKey);
+    }
+    
     const fieldMapping = {
         'prime_cee': 'prime_cee',
         'prime_cee_dup': 'prime_cee',
@@ -18,77 +28,27 @@ function getFieldValue(fieldName, formData) {
         'numero_cadastral': 'numero_immatriculation',
         'date_etablissement': 'date_signature',
         'nombre_logements': 'nombre_logements',
-        'nombre_logements_dup': 'nombre_logements', // Duplication
+        'nombre_logements_dup': 'nombre_logements',
         
         // Spécifique au CDC
-        'date_cdc': 'date_devis',            // Date CDC = Date devis (première position)
-        'date_cdc_dup': 'date_devis',        // Duplication de la date (deuxième position)
-        'prime_cee_cdc': 'prime_cee'         // Prime CEE pour le CDC
+        'date_cdc': 'date_devis',
+        'date_cdc_dup': 'date_devis',
+        'prime_cee_cdc': 'prime_cee'
     };
     
     const actualField = fieldMapping[fieldName] || fieldName;
-    return formData[actualField] || "";
+    const value = formData[actualField] || "";
+    
+    // Mettre en cache
+    window.myhouseFieldCache.set(cacheKey, value);
+    
+    return value;
 }
 
-
-
-const MYHOUSE_DEBUG_GRID = false;
 let myhouseSelectedFileType = '';
 
 
 
-async function drawMyhouseGrid(page, pdfDoc, step = 10) {
-    const { width, height } = page.getSize();
-    const { rgb, StandardFonts } = PDFLib;
-    
-    const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-
-    for (let x = 0; x <= width; x += step) {
-        page.drawLine({
-            start: { x, y: 0 },
-            end: { x, y: height },
-            thickness: x % 50 === 0 ? 0.6 : 0.2,
-            color: rgb(0.7, 0.9, 0.7) 
-        });
-
-        if (x % 50 === 0) {
-            page.drawText(`${x}`, {
-                x: x + 2,
-                y: 2,
-                size: 5,
-                color: rgb(0.4, 0.6, 0.4), 
-                font: font
-            });
-        }
-    }
-
-    for (let y = 0; y <= height; y += step) {
-        page.drawLine({
-            start: { x: 0, y },
-            end: { x: width, y },
-            thickness: y % 50 === 0 ? 0.6 : 0.2,
-            color: rgb(0.7, 0.9, 0.7) 
-        });
-
-        if (y % 50 === 0) {
-            page.drawText(`${y}`, {
-                x: 2,
-                y: y + 2,
-                size: 5,
-                color: rgb(0.4, 0.6, 0.4), 
-                font: font
-            });
-        }
-    }
-
-    page.drawText('MYHOUSE DEBUG GRID', {
-        x: width - 100,
-        y: 15,
-        size: 8,
-        color: rgb(0.2, 0.5, 0.2), 
-        font: font
-    });
-}
 
 const originalSelectDossier = window.selectDossier || function() {};
 
@@ -1282,6 +1242,25 @@ async function generateMyhouseCdc() {
 
 
 async function generateMyhousePdf(formData, type) {
+    // OPTIMISATION : Validation préalable
+    if (!formData || typeof formData !== 'object') {
+        console.error("❌ Données MYHOUSE invalides");
+        alert("❌ Les données du formulaire sont invalides.");
+        return;
+    }
+    
+    // Valider les dates
+    Object.keys(formData).forEach(key => {
+        if (key.includes('date') && formData[key]) {
+            // Vérifier que la date n'est pas en 5256 (erreur dans vos logs)
+            const year = formData[key].split('-')[0];
+            if (year && parseInt(year) > 2100) {
+                console.warn(`⚠️ Date suspecte détectée pour ${key}: ${formData[key]}`);
+                // Corriger automatiquement ou demander à l'utilisateur
+            }
+        }
+    });
+    
     const myhousePdfMap = {
     attestation_signataire: "PDFS/attestation_signataire.pdf",
     attestation_realisation: "PDFS/attestation_realisation.pdf",
@@ -1362,9 +1341,7 @@ async function generateMyhousePdf(formData, type) {
                 });
             }
             
-            if (MYHOUSE_DEBUG_GRID) {
-                drawMyhouseGrid(page, pdfDoc);
-            }
+          
         });
 
         const pdfBytes = await pdfDoc.save();
@@ -1386,108 +1363,6 @@ async function generateMyhousePdf(formData, type) {
     }
 }
 
-async function drawMyhouseGrid(page, pdfDoc, step = 10) {
-    const { width, height } = page.getSize();
-    const { rgb, StandardFonts } = PDFLib;
-    
-    const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    
-
-    for (let x = 0; x <= width; x += step) {
-        page.drawLine({
-            start: { x, y: 0 },
-            end: { x, y: height },
-            thickness: x % 50 === 0 ? 0.6 : 0.2,
-            color: rgb(0.7, 0.9, 0.7) 
-        });
-
-        if (x % 50 === 0) {
-            page.drawText(`${x}`, {
-                x: x + 2,
-                y: 10, 
-                size: 6,
-                color: rgb(0.4, 0.6, 0.4), 
-                font: font
-            });
-        }
-    }
-
-    for (let y = 0; y <= height; y += step) {
-        page.drawLine({
-            start: { x: 0, y },
-            end: { x: width, y },
-            thickness: y % 50 === 0 ? 0.6 : 0.2,
-            color: rgb(0.7, 0.9, 0.7) 
-        });
-
-        if (y % 50 === 0) {
-            const yFromBottom = height - y;
-            
-            page.drawText(`${y}`, {
-                x: 5, 
-                y: yFromBottom - 5, 
-                size: 6,
-                color: rgb(0.4, 0.6, 0.4), 
-                font: font
-            });
-        }
-    }
-
-    page.drawText('MYHOUSE DEBUG GRID', {
-        x: width - 110,
-        y: 20, 
-        size: 8,
-        color: rgb(0.2, 0.5, 0.2), 
-        font: font
-    });
-
-    const cornerSize = 15;
-    const cornerColor = rgba(12, 197, 98, 1); 
-    
-    page.drawRectangle({
-        x: 0,
-        y: height - cornerSize,
-        width: cornerSize,
-        height: cornerSize,
-        color: cornerColor,
-        opacity: 0.5
-    });
-    
-    page.drawRectangle({
-        x: width - cornerSize,
-        y: height - cornerSize,
-        width: cornerSize,
-        height: cornerSize,
-        color: cornerColor,
-        opacity: 0.5
-    });
-    
-    page.drawRectangle({
-        x: 0,
-        y: 0,
-        width: cornerSize,
-        height: cornerSize,
-        color: cornerColor,
-        opacity: 0.5
-    });
-    
-    page.drawRectangle({
-        x: width - cornerSize,
-        y: 0,
-        width: cornerSize,
-        height: cornerSize,
-        color: cornerColor,
-        opacity: 0.5
-    });
-    
-    page.drawText(`Dimensions: ${width.toFixed(0)}x${height.toFixed(0)}`, {
-        x: width / 2 - 50,
-        y: height - 30,
-        size: 8,
-        color: rgb(0.2, 0.5, 0.2),
-        font: font
-    });
-}
 const myhousePdfCoordinates = {
     devis: {
         page1: {
@@ -1664,4 +1539,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function generateMyhouseFromDynamicForm(type) {
     await generateMyhouseDocument(type);
+}
+
+async function generateMyhousePdf(formData, type) {
+    try {
+        console.time(`Génération PDF MYHOUSE ${type}`);
+        
+        // ... votre code existant ...
+        
+        console.timeEnd(`Génération PDF MYHOUSE ${type}`);
+        
+    } catch (error) {
+        console.timeEnd(`Génération PDF MYHOUSE ${type}`);
+        throw error;
+    }
 }
