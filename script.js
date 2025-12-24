@@ -966,11 +966,11 @@ const pdfCoordinates = {
         page4: {
             reference_devis: { x: 215, y: 733, size: 10, color: PDFColors.WHITE, bold: true },
             date_devis: { x: 139, y: 718, size: 10, color: PDFColors.WHITE, bold: true },
-            montant_ht: { x: 522, y: 383, size: 8, color: PDFColors.DARK_BLUE },
-            montant_tva: { x: 522, y: 371, size: 8, color: PDFColors.DARK_BLUE },
-            montant_ttc: { x: 522, y: 361, size: 8, color: PDFColors.DARK_BLUE },
-            prime_cee: { x: 522, y: 350, size: 8, color: PDFColors.DARK_BLUE },
-            reste_a_charge: { x: 522, y: 315, size: 8, color: PDFColors.DARK_BLUE },
+            montant_ht: { x: 522, y: 383, size: 8, color: PDFColors.DARK_BLUE,bold: true },
+            montant_tva: { x: 522, y: 371, size: 8, color: PDFColors.DARK_BLUE,bold: true },
+            montant_ttc: { x: 522, y: 361, size: 8, color: PDFColors.DARK_BLUE,bold: true},
+            prime_cee: { x: 522, y: 350, size: 8, color: PDFColors.DARK_BLUE,bold: true },
+            reste_a_charge: { x: 522, y: 315, size: 8, color: PDFColors.DARK_BLUE ,bold: true},
             montant_ht_dup: { x: 77, y: 277, size: 7, color: PDFColors.BLACK }
         },
         page5: {

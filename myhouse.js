@@ -474,122 +474,191 @@ function loadMyhouseForm(type) {
 
 
     if (type === "rapport") {
-        const lastFactureData = localStorage.getItem("lastMyhouseFactureData");
+    const lastFactureData = localStorage.getItem("lastMyhouseFactureData");
 
-        if (!lastFactureData) {
-            container.innerHTML = `
-                <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
-                    <div class="flex items-start gap-3">
-                        <i class="fas fa-exclamation-triangle text-red-600 text-xl mt-1"></i>
-                        <div>
-                            <h4 class="font-bold text-red-700 mb-2">Facture MYHOUSE requise !</h4>
-                            <p class="text-red-600 mb-3">
-                                Vous devez d'abord générer une facture MYHOUSE avant de pouvoir créer un rapport.
-                                Les informations techniques seront automatiquement importées depuis la facture.
-                            </p>
-                            <div class="flex gap-3">
-                                <button onclick="createMyhouseFactureFirst()"
-                                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                                    <i class="fas fa-file-invoice mr-2"></i>
-                                    Créer une facture MYHOUSE d'abord
-                                </button>
-                                <button onclick="goBackToStep1()"
-                                    class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
-                                    <i class="fas fa-arrow-left mr-2"></i>
-                                    Retour
-                                </button>
-                            </div>
+    if (!lastFactureData) {
+        container.innerHTML = `
+            <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-xl mt-1"></i>
+                    <div>
+                        <h4 class="font-bold text-red-700 mb-2">Facture MYHOUSE requise !</h4>
+                        <p class="text-red-600 mb-3">
+                            Vous devez d'abord générer une facture MYHOUSE avant de pouvoir créer un rapport.
+                            Les informations techniques seront automatiquement importées depuis la facture.
+                        </p>
+                        <div class="flex gap-3">
+                            <button onclick="createMyhouseFactureFirst()"
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                                <i class="fas fa-file-invoice mr-2"></i>
+                                Créer une facture MYHOUSE d'abord
+                            </button>
+                            <button onclick="goBackToStep1()"
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                                <i class="fas fa-arrow-left mr-2"></i>
+                                Retour
+                            </button>
                         </div>
                     </div>
                 </div>
-            `;
+            </div>
+        `;
 
-            document.getElementById("dynamic-form").classList.remove("hidden");
-            document.getElementById('submitBtn').disabled = true;
-            return;
-        }
-
-        let factureData;
-        try {
-            factureData = JSON.parse(lastFactureData);
-            
-            container.innerHTML = `
-                <div class="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-xl">
-                    <div class="flex items-start gap-3">
-                        <i class="fas fa-info-circle text-purple-600 text-xl mt-1"></i>
-                        <div>
-                            <h4 class="font-bold text-purple-700 mb-2">Informations automatiques importées depuis la facture</h4>
-                            <p class="text-purple-600 mb-3">
-                                Ces informations sont automatiquement récupérées depuis la facture MYHOUSE :
-                            </p>
-                            <div class="grid grid-cols-2 gap-3 text-sm bg-white p-3 rounded-lg border">
-                                <div class="text-gray-600">Référence facture:</div>
-                                <div class="font-medium">${factureData.reference_facture || 'Non spécifié'}</div>
-                                <div class="text-gray-600">Date facture:</div>
-                                <div class="font-medium">${factureData.date_facture || 'Non spécifié'}</div>
-                                <div class="text-gray-600">Puissance nominale:</div>
-                                <div class="font-medium">${factureData.puissance_nominale || 'Non spécifié'}</div>
-                                <div class="text-gray-600">Nombre d'émetteurs:</div>
-                                <div class="font-medium">${factureData.nombre_emetteurs || 'Non spécifié'}</div>
-                                <div class="text-gray-600">Volume circuit:</div>
-                                <div class="font-medium">${factureData.volume_total || 'Non spécifié'}</div>
-                                <div class="text-gray-600">Référence devis:</div>
-                                <div class="font-medium">${factureData.reference_devis || 'Non spécifié'}</div>
-                            </div>
-                            <p class="text-xs text-purple-500 mt-2">
-                                Ces données seront automatiquement incluses dans le rapport.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            myhouseFileForms[type].forEach(field => {
-                const placeholder = field.example || "";
-                const isRequired = field.required ? 'required' : '';
-                
-                container.innerHTML += `
-                    <label class="block mb-4">
-                        <span class="text-gray-700 font-medium">
-                            ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ''}
-                        </span>
-                        <input
-                            type="text"
-                            name="${field.name}"
-                            class="w-full mt-1 px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-600 focus:ring-2 focus:ring-green-200 focus:outline-none transition"
-                            ${isRequired}
-                            placeholder="${placeholder}"
-                        >
-                        ${!field.required ? `<p class="text-xs text-gray-500 mt-1">Champ facultatif</p>` : ''}
-                    </label>
-                `;
-            });
-
-            container.innerHTML += `
-                <div class="pt-4 border-t border-gray-200">
-                    <button type="button"
-                        onclick="generateMyhouseRapport()"
-                        class="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-purple-800 hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 w-full">
-                        <i class="fas fa-file-alt mr-2"></i>
-                        📄 Générer le Rapport MYHOUSE
-                    </button>
-                    <p class="text-xs text-gray-500 text-center mt-2">
-                        Cliquez pour générer le rapport avec toutes les informations importées de la facture
-                    </p>
-                </div>
-            `;
-
-            document.getElementById("dynamic-form").classList.remove("hidden");
-            document.getElementById('submitBtn').disabled = true;
-
-        } catch (error) {
-            console.error("Erreur données facture:", error);
-            container.innerHTML = `<p class="text-red-600">Erreur de données. Veuillez recréer une facture MYHOUSE.</p>`;
-            document.getElementById("dynamic-form").classList.remove("hidden");
-        }
+        document.getElementById("dynamic-form").classList.remove("hidden");
+        document.getElementById('submitBtn').disabled = true;
         return;
     }
 
+    let factureData;
+    try {
+        factureData = JSON.parse(lastFactureData);
+        
+        container.innerHTML = `
+            <div class="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-info-circle text-purple-600 text-xl mt-1"></i>
+                    <div>
+                        <h4 class="font-bold text-purple-700 mb-2">Informations automatiques importées depuis la facture</h4>
+                        <p class="text-purple-600 mb-3">
+                            Ces informations sont automatiquement récupérées depuis la facture MYHOUSE :
+                        </p>
+                        <div class="grid grid-cols-2 gap-3 text-sm bg-white p-3 rounded-lg border">
+                            <div class="text-gray-600">Référence facture:</div>
+                            <div class="font-medium">${factureData.reference_facture || 'Non spécifié'}</div>
+                            <div class="text-gray-600">Date facture:</div>
+                            <div class="font-medium">${factureData.date_facture || 'Non spécifié'}</div>
+                            <div class="text-gray-600">Puissance nominale:</div>
+                            <div class="font-medium">${factureData.puissance_nominale || 'Non spécifié'}</div>
+                            <div class="text-gray-600">Nombre d'émetteurs:</div>
+                            <div class="font-medium">${factureData.nombre_emetteurs || 'Non spécifié'}</div>
+                            <div class="text-gray-600">Volume circuit:</div>
+                            <div class="font-medium">${factureData.volume_total || 'Non spécifié'}</div>
+                            <div class="text-gray-600">Référence devis:</div>
+                            <div class="font-medium">${factureData.reference_devis || 'Non spécifié'}</div>
+                        </div>
+                        <p class="text-xs text-purple-500 mt-2">
+                            Ces données seront automatiquement incluses dans le rapport.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Champs du formulaire
+        myhouseFileForms[type].forEach(field => {
+            const placeholder = field.example || "";
+            const isRequired = field.required ? 'required' : '';
+            
+            container.innerHTML += `
+                <label class="block mb-4">
+                    <span class="text-gray-700 font-medium">
+                        ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ''}
+                    </span>
+                    <input
+                        type="text"
+                        name="${field.name}"
+                        class="w-full mt-1 px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-600 focus:ring-2 focus:ring-green-200 focus:outline-none transition"
+                        ${isRequired}
+                        placeholder="${placeholder}"
+                    >
+                    ${!field.required ? `<p class="text-xs text-gray-500 mt-1">Champ facultatif</p>` : ''}
+                </label>
+            `;
+        });
+
+        // AJOUT : Cases à cocher pour le choix du template
+        container.innerHTML += `
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h4 class="text-lg font-bold text-gray-800 mb-4">🏭 Sélectionnez le type de rapport :</h4>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Option VIRAX -->
+                    <label class="relative flex items-start p-4 border-2 border-gray-300 rounded-xl cursor-pointer hover:border-blue-500 transition-all duration-200 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                        <div class="flex items-center h-5">
+                            <input type="radio" 
+                                   name="rapport_template" 
+                                   value="virax"
+                                   class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                   checked>
+                        </div>
+                        <div class="ml-3 flex flex-col">
+                            <span class="block text-sm font-semibold text-gray-900">
+                                <i class="fas fa-industry mr-2 text-blue-600"></i>
+                                RAPPORT VIRAX
+                            </span>
+                            <span class="block text-sm text-gray-500 mt-1">
+                                Template spécifique pour les rapports Virax
+                            </span>
+                            <span class="text-xs text-blue-600 font-medium mt-2">
+                                📄 PDF : rapport_myhouse_virax.pdf
+                            </span>
+                        </div>
+                        <div class="absolute top-4 right-4">
+                            <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                        </div>
+                    </label>
+
+                    <!-- Option KILOUTO -->
+                    <label class="relative flex items-start p-4 border-2 border-gray-300 rounded-xl cursor-pointer hover:border-green-500 transition-all duration-200 has-[:checked]:border-green-500 has-[:checked]:bg-green-50">
+                        <div class="flex items-center h-5">
+                            <input type="radio" 
+                                   name="rapport_template" 
+                                   value="kilouto"
+                                   class="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500">
+                        </div>
+                        <div class="ml-3 flex flex-col">
+                            <span class="block text-sm font-semibold text-gray-900">
+                                <i class="fas fa-tools mr-2 text-green-600"></i>
+                                RAPPORT KILOUTO
+                            </span>
+                            <span class="block text-sm text-gray-500 mt-1">
+                                Template spécifique pour les rapports Kilouto
+                            </span>
+                            <span class="text-xs text-green-600 font-medium mt-2">
+                                📄 PDF : rapport_myhouse_kilouto.pdf
+                            </span>
+                        </div>
+                        <div class="absolute top-4 right-4">
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-600">
+                        <i class="fas fa-info-circle mr-2 text-gray-500"></i>
+                        Sélectionnez le template correspondant à votre type de rapport. 
+                        Le contenu sera le même, seul le design du PDF changera.
+                    </p>
+                </div>
+            </div>
+        `;
+
+        // Bouton de génération
+        container.innerHTML += `
+            <div class="pt-6 border-t border-gray-200">
+                <button type="button"
+                    onclick="generateMyhouseRapport()"
+                    class="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-purple-800 hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 w-full">
+                    <i class="fas fa-file-alt mr-2"></i>
+                    📄 Générer le Rapport MYHOUSE
+                </button>
+                <p class="text-xs text-gray-500 text-center mt-2">
+                    Cliquez pour générer le rapport avec toutes les informations importées de la facture
+                </p>
+            </div>
+        `;
+
+        document.getElementById("dynamic-form").classList.remove("hidden");
+        document.getElementById('submitBtn').disabled = true;
+
+    } catch (error) {
+        console.error("Erreur données facture:", error);
+        container.innerHTML = `<p class="text-red-600">Erreur de données. Veuillez recréer une facture MYHOUSE.</p>`;
+        document.getElementById("dynamic-form").classList.remove("hidden");
+    }
+    return;
+}
 
 if (type === "attestation_realisation") {
         document.getElementById("dynamic-form").classList.remove("hidden");
@@ -1132,12 +1201,23 @@ async function generateMyhouseFacture() {
     }
 }
 
+
+
 async function generateMyhouseRapport() {
     try {
         const formData = {};
         document.querySelectorAll("#dynamic-fields input").forEach(input => {
-            formData[input.name] = input.value;
+            if (input.type !== "radio") { // Ne pas inclure les radio buttons dans formData
+                formData[input.name] = input.value;
+            }
         });
+        
+        // AJOUT : Récupérer le choix du template
+        const templateChoice = document.querySelector('input[name="rapport_template"]:checked');
+        if (!templateChoice) {
+            alert("❌ Veuillez sélectionner un type de rapport (VIRAX ou KILOUTO).");
+            return;
+        }
         
         const lastFactureData = localStorage.getItem("lastMyhouseFactureData");
         if (!lastFactureData) {
@@ -1174,24 +1254,22 @@ async function generateMyhouseRapport() {
             ...formData,
             
             reference_rapport: referenceRapport,
-            date_rapport: factureData.date_facture || new Date().toISOString().split('T')[0]
+            date_rapport: factureData.date_facture || new Date().toISOString().split('T')[0],
+            
+            // AJOUT : Information sur le template choisi
+            template_type: templateChoice.value
         };
         
         console.log("📊 Données du rapport MYHOUSE:", rapportData);
+        console.log("🎯 Template choisi:", templateChoice.value);
         
         await generateMyhousePdf(rapportData, 'rapport');
-        
-        alert("✅ Rapport MYHOUSE généré avec succès !\n" +
-              `Référence: ${referenceRapport}\n` +
-              `Basé sur la facture: ${factureData.reference_facture || 'Non spécifiée'}\n` +
-              `Date: ${rapportData.date_rapport || 'Non spécifiée'}`);
         
     } catch (error) {
         console.error("Erreur rapport MYHOUSE:", error);
         alert("❌ Erreur lors de la génération du rapport MYHOUSE.");
     }
 }
-
 
 
 async function generateMyhouseCdc() {
@@ -1239,7 +1317,6 @@ async function generateMyhouseCdc() {
     }
 }
 
-
 async function generateMyhousePdf(formData, type) {
     // OPTIMISATION : Validation préalable
     if (!formData || typeof formData !== 'object') {
@@ -1258,14 +1335,33 @@ async function generateMyhousePdf(formData, type) {
         }
     });
     
+    // AJOUT : Gestion des templates de rapport
     const myhousePdfMap = {
         attestation_signataire: "PDFS/myhouse_attestation_signataire.pdf",
         attestation_realisation: "PDFS/myhouse_attestation_realisation.pdf",
         devis: "PDFS/myhouse_devis.pdf",
         facture: "PDFS/myhouse_facture.pdf",
         cdc: "PDFS/myhouse_cdc.pdf",
-        rapport: "PDFS/myhouse_rapport.pdf"
+        rapport: "PDFS/rapport_myhouse_virax.pdf" // Valeur par défaut
     };
+
+    // AJOUT : Vérifier si c'est un rapport et quel template choisir
+    if (type === "rapport") {
+        // Récupérer la valeur du radio button
+        const templateChoice = document.querySelector('input[name="rapport_template"]:checked');
+        
+        if (templateChoice) {
+            if (templateChoice.value === "virax") {
+                myhousePdfMap.rapport = "PDFS/rapport_myhouse_virax.pdf";
+                console.log("📄 Template sélectionné : RAPPORT VIRAX");
+            } else if (templateChoice.value === "kilouto") {
+                myhousePdfMap.rapport = "PDFS/rapport_myhouse_kilouto.pdf";
+                console.log("📄 Template sélectionné : RAPPORT KILOUTO");
+            }
+        } else {
+            console.log("ℹ️ Aucun template sélectionné, utilisation par défaut (VIRAX)");
+        }
+    }
 
     if (!myhousePdfMap[type]) {
         alert("Type de document MYHOUSE non supporté.");
@@ -1273,7 +1369,7 @@ async function generateMyhousePdf(formData, type) {
     }
 
     try {
-        console.time(`Génération PDF MYHOUSE ${type}`); // AJOUTER ICI
+        console.time(`Génération PDF MYHOUSE ${type}`);
         
         const existingPdf = await fetch(myhousePdfMap[type]).then(res => res.arrayBuffer());
         const { PDFDocument, StandardFonts, rgb } = PDFLib;
@@ -1292,6 +1388,7 @@ async function generateMyhousePdf(formData, type) {
 
         console.log(`=== GÉNÉRATION MYHOUSE ${type.toUpperCase()} ===`);
         console.log("Données MYHOUSE:", formData);
+        console.log("Template PDF utilisé:", myhousePdfMap[type]);
 
         pages.forEach((page, index) => {
             const pageKey = `page${index + 1}`;
@@ -1319,10 +1416,10 @@ async function generateMyhousePdf(formData, type) {
                                 color = rgb(0.45, 0.50, 0.19);
                                 break;
                             case 'light_blue':
-                                color = rgb(0.4, 0.7, 1); // AJOUTER pour prime_cee_cdc
+                                color = rgb(0.4, 0.7, 1);
                                 break;
                             case 'red':
-                                color = rgb(1, 0, 0); // AJOUTER pour date_cdc
+                                color = rgb(1, 0, 0);
                                 break;
                             case 'black':
                             default:
@@ -1352,21 +1449,41 @@ async function generateMyhousePdf(formData, type) {
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         
-        const fileName = `myhouse_${type}_${formData.reference_devis || formData.reference_facture || Date.now()}.pdf`;
+        // AJOUT : Nom du fichier basé sur le template choisi
+        let fileName = "";
+        if (type === "rapport") {
+            const templateName = document.querySelector('input[name="rapport_template"]:checked')?.value || "virax";
+            fileName = `rapport_myhouse_${templateName}_${formData.reference_facture || Date.now()}.pdf`;
+        } else {
+            fileName = `myhouse_${type}_${formData.reference_devis || formData.reference_facture || Date.now()}.pdf`;
+        }
+        
         link.download = fileName;
         link.click();
         
         console.log(`✅ MYHOUSE ${type.toUpperCase()} généré: ${fileName}`);
-        console.timeEnd(`Génération PDF MYHOUSE ${type}`); // AJOUTER ICI
+        console.timeEnd(`Génération PDF MYHOUSE ${type}`);
+        
+        // AJOUT : Message de confirmation avec le template utilisé
+        if (type === "rapport") {
+            const templateName = document.querySelector('input[name="rapport_template"]:checked')?.value || "virax";
+            alert(`✅ Rapport MYHOUSE (${templateName.toUpperCase()}) généré avec succès !\n` +
+                  `Fichier : ${fileName}\n` +
+                  `Template : ${templateName === "virax" ? "VIRAX" : "KILOUTO"}`);
+        }
+        
         return true;
 
     } catch (error) {
         console.error("❌ Erreur PDF MYHOUSE:", error);
-        console.timeEnd(`Génération PDF MYHOUSE ${type}`); // AJOUTER ICI (même en cas d'erreur)
+        console.timeEnd(`Génération PDF MYHOUSE ${type}`);
         alert(`❌ Erreur lors de la génération du document MYHOUSE ${type}.`);
         throw error;
     }
 }
+
+
+
 const myhousePdfCoordinates = {
     devis: {
         page1: {
