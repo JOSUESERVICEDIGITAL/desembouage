@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Validation des comptes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">
+                        <i class="fas fa-user-shield mr-3"></i>
+                        Panel d'Administration MYHOUSE
+                    </h1>
+                    <p class="text-gray-600">Validation des inscriptions utilisateurs</p>
+                </div>
+                <div>
+                    <button onclick="window.location.href = 'index.html'"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Retour à l'app
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <div class="bg-white rounded-2xl shadow-xl p-6">
+            <div class="mb-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-users mr-2"></i>
+                    Inscriptions en attente
+                </h2>
+                
+                <div id="pendingList" class="space-y-4">
+                    <!-- Liste générée par JavaScript -->
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-user-check mr-2"></i>
+                    Utilisateurs validés
+                </h2>
+                
+                <div id="approvedList" class="space-y-4">
+                    <!-- Liste générée par JavaScript -->
+                </div>
+            </div>
+            
+            <div class="flex gap-4">
+                <button onclick="admin.refreshLists()" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-sync mr-2"></i>
+                    Actualiser
+                </button>
+                <button onclick="admin.exportData()" 
+                        class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                    <i class="fas fa-download mr-2"></i>
+                    Exporter les données
+                </button>
+                <button onclick="admin.debugUsers()" 
+                        class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                    <i class="fas fa-bug mr-2"></i>
+                    Debug
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class AdminPanel {
+            constructor() {
+                // Vérifier que l'utilisateur est bien admin
+                const currentUser = JSON.parse(localStorage.getItem('current_user'))?.user;
+                
+                if (!currentUser || currentUser.role !== 'admin') {
+                    alert("⛔ Accès réservé aux administrateurs");
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                this.adminUser = currentUser;
+                this.users = JSON.parse(localStorage.getItem('myhouse_users')) || [];
+                this.pendingRegistrations = JSON.parse(localStorage.getItem('pending_registrations')) || [];
+                
+                console.log("👑 Admin panel initialisé par:", this.adminUser);
+                console.log("👥 Utilisateurs:", this.users);
+                console.log("⏳ En attente:", this.pendingRegistrations);
+                
+                this.loadLists();
+            }
+            
+            loadLists() {
+                this.loadPendingList();
+                this.loadApprovedList();
+            }
+            
+            loadPendingList() {
+                const container = document.getElementById('pendingList');
+                if (!container) return;
+                
+                if (this.pendingRegistrations.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-check-circle text-3xl mb-3 text-green-500"></i>
+                            <p>Aucune inscription en attente</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = this.pendingRegistrations.map(user => `
+                    <div class="border border-gray-200 rounded-xl p-4 hover:shadow-md transition">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-gray-800">
+                                    ${user.lastName} ${user.firstName}
+                                </h3>
+                                <p class="text-gray-600 text-sm">
+                                    <i class="fas fa-phone mr-1"></i> ${user.phone}
+                                </p>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    Inscrit le ${new Date(user.registrationDate).toLocaleDateString()}
+                                </p>
+                                <p class="text-xs text-yellow-600 mt-1">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    En attente de validation
+                                </p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="admin.approveUser('${user.id}')"
+                                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                    <i class="fas fa-check mr-1"></i>
+                                    Valider
+                                </button>
+                                <button onclick="admin.rejectUser('${user.id}')"
+                                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                                    <i class="fas fa-times mr-1"></i>
+                                    Rejeter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            loadApprovedList() {
+                const container = document.getElementById('approvedList');
+                if (!container) return;
+                
+                const approvedUsers = this.users.filter(u => u.validated);
+                
+                if (approvedUsers.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-user-clock text-3xl mb-3"></i>
+                            <p>Aucun utilisateur validé</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = approvedUsers.map(user => `
+                    <div class="border border-green-200 bg-green-50 rounded-xl p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-gray-800">
+                                    <i class="fas fa-user-check text-green-600 mr-2"></i>
+                                    ${user.lastName} ${user.firstName}
+                                </h3>
+                                <p class="text-gray-600 text-sm">
+                                    <i class="fas fa-phone mr-1"></i> ${user.phone}
+                                    ${user.email ? `<i class="fas fa-envelope mr-1 ml-2"></i> ${user.email}` : ''}
+                                </p>
+                                <p class="text-xs text-green-600 mt-1 font-medium">
+                                    <i class="fas fa-calendar-check mr-1"></i>
+                                    Validé le ${user.validationDate ? new Date(user.validationDate).toLocaleDateString() : 'Date inconnue'}
+                                </p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="admin.sendWhatsApp('${user.phone}', '${user.firstName}')"
+                                        class="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                                    <i class="fab fa-whatsapp"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // MÉTHODE APPROVEUSER CORRIGÉE
+            approveUser(userId) {
+                try {
+                    console.log("✅ Validation de l'utilisateur ID:", userId);
+                    
+                    // Trouver l'utilisateur dans pendingRegistrations
+                    const userIndex = this.pendingRegistrations.findIndex(u => u.id == userId);
+                    if (userIndex === -1) {
+                        throw new Error("Utilisateur non trouvé dans les inscriptions en attente");
+                    }
+                    
+                    const user = this.pendingRegistrations[userIndex];
+                    console.log("👤 Utilisateur à valider:", user);
+                    
+                    // Marquer comme validé et ajouter la date
+                    user.validated = true;
+                    user.validationDate = new Date().toISOString();
+                    
+                    // Ajouter aux utilisateurs validés
+                    this.users.push(user);
+                    
+                    // Retirer des inscriptions en attente
+                    this.pendingRegistrations.splice(userIndex, 1);
+                    
+                    // Sauvegarder dans localStorage
+                    localStorage.setItem('myhouse_users', JSON.stringify(this.users));
+                    localStorage.setItem('pending_registrations', JSON.stringify(this.pendingRegistrations));
+                    
+                    console.log("💾 Données sauvegardées:", {
+                        users: this.users,
+                        pending: this.pendingRegistrations
+                    });
+                    
+                    // Envoyer notification WhatsApp
+                    this.sendApprovalNotification(user);
+                    
+                    // Recharger les listes
+                    this.loadLists();
+                    
+                    // Afficher notification
+                    this.showNotification(`✅ ${user.firstName} ${user.lastName} validé !`, 'success');
+                    
+                } catch (error) {
+                    console.error("❌ Erreur validation:", error);
+                    this.showNotification(`❌ Erreur: ${error.message}`, 'error');
+                }
+            }
+            
+            rejectUser(userId) {
+                try {
+                    const reason = prompt("Raison du rejet :", "Informations incomplètes");
+                    if (reason === null) return;
+                    
+                    const userIndex = this.pendingRegistrations.findIndex(u => u.id == userId);
+                    if (userIndex === -1) {
+                        throw new Error("Utilisateur non trouvé");
+                    }
+                    
+                    const user = this.pendingRegistrations[userIndex];
+                    
+                    // Retirer de la liste d'attente
+                    this.pendingRegistrations.splice(userIndex, 1);
+                    localStorage.setItem('pending_registrations', JSON.stringify(this.pendingRegistrations));
+                    
+                    // Envoyer notification
+                    this.sendRejectionNotification(user, reason);
+                    
+                    // Recharger les listes
+                    this.loadLists();
+                    
+                    this.showNotification(`❌ ${user.firstName} ${user.lastName} rejeté`, 'error');
+                    
+                } catch (error) {
+                    console.error("❌ Erreur rejet:", error);
+                    this.showNotification(`❌ Erreur: ${error.message}`, 'error');
+                }
+            }
+            
+            sendApprovalNotification(user) {
+                const message = encodeURIComponent(
+                    `✅ VOTRE COMPTE MYHOUSE EST VALIDÉ !\n\n` +
+                    `Bonjour ${user.firstName},\n\n` +
+                    `Votre inscription sur MYHOUSE a été approuvée !\n` +
+                    `Vous pouvez maintenant vous connecter.\n\n` +
+                    `📱 Connexion avec : ${user.phone}\n` +
+                    `🔑 Mot de passe : celui que vous avez choisi\n\n` +
+                    `Lien : ${window.location.origin}\n\n` +
+                    `Merci pour votre confiance !`
+                );
+                
+                const whatsappLink = `https://wa.me/${user.phone.replace('+', '')}?text=${message}`;
+                window.open(whatsappLink, '_blank');
+                
+                console.log(`📱 Notification de validation envoyée à ${user.phone}`);
+            }
+            
+            sendRejectionNotification(user, reason) {
+                const message = encodeURIComponent(
+                    `❌ INSCRIPTION NON VALIDÉE\n\n` +
+                    `Bonjour ${user.firstName},\n\n` +
+                    `Votre inscription n'a pas pu être validée.\n` +
+                    `Raison : ${reason}\n\n` +
+                    `Veuillez contacter le support pour plus d'informations.\n\n` +
+                    `Cordialement,\nL'équipe MYHOUSE`
+                );
+                
+                const whatsappLink = `https://wa.me/${user.phone.replace('+', '')}?text=${message}`;
+                window.open(whatsappLink, '_blank');
+            }
+            
+            showNotification(message, type = 'success') {
+                const notification = document.createElement('div');
+                notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 animate-slide-in ${
+                    type === 'success' ? 'bg-green-100 text-green-800 border-green-200' : 
+                    'bg-red-100 text-red-800 border-red-200'
+                }`;
+                notification.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 5000);
+            }
+            
+            refreshLists() {
+                this.users = JSON.parse(localStorage.getItem('myhouse_users')) || [];
+                this.pendingRegistrations = JSON.parse(localStorage.getItem('pending_registrations')) || [];
+                this.loadLists();
+                this.showNotification("✅ Listes actualisées !", 'success');
+            }
+            
+            exportData() {
+                const data = {
+                    users: this.users,
+                    pending: this.pendingRegistrations,
+                    exportDate: new Date().toISOString(),
+                    exportedBy: this.adminUser?.phone
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `myhouse_users_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.showNotification("✅ Données exportées !", 'success');
+            }
+            
+            sendWhatsApp(phone, firstName) {
+                const message = encodeURIComponent(
+                    `Bonjour ${firstName},\n\n` +
+                    `Message de l'administrateur MYHOUSE.\n` +
+                    `Comment puis-je vous aider ?`
+                );
+                
+                window.open(`https://wa.me/${phone.replace('+', '')}?text=${message}`, '_blank');
+            }
+            
+            // FONCTION DE DEBUG
+            debugUsers() {
+                console.log("=== DEBUG UTILISATEURS ===");
+                console.log("1. Tous les utilisateurs:", this.users);
+                console.log("2. En attente:", this.pendingRegistrations);
+                
+                // Vérifier un utilisateur spécifique
+                const testPhone = "+21277986162";
+                const user = this.users.find(u => u.phone === testPhone);
+                const pendingUser = this.pendingRegistrations.find(u => u.phone === testPhone);
+                
+                console.log("3. Utilisateur", testPhone, "dans users:", user);
+                console.log("4. Utilisateur", testPhone, "dans pending:", pendingUser);
+                
+                if (user) {
+                    console.log("5. Détails:", {
+                        validé: user.validated,
+                        dateValidation: user.validationDate,
+                        passwordHash: user.password
+                    });
+                }
+                
+                this.showNotification("✅ Debug terminé - Voir la console", 'success');
+            }
+            
+            // FONCTION POUR RÉINITIALISER LES UTILISATEURS
+            resetAllUsers() {
+                if (confirm("Êtes-vous sûr de vouloir réinitialiser TOUS les utilisateurs ? Cette action est irréversible.")) {
+                    localStorage.removeItem('myhouse_users');
+                    localStorage.removeItem('pending_registrations');
+                    localStorage.removeItem('myhouse_sessions');
+                    localStorage.removeItem('current_user');
+                    
+                    alert("✅ Tous les utilisateurs ont été réinitialisés. La page va se recharger.");
+                    window.location.reload();
+                }
+            }
+        }
+        
+        const admin = new AdminPanel();
+        window.admin = admin;
+        
+        // Ajouter un bouton reset (pour debug seulement)
+        setTimeout(() => {
+            const header = document.querySelector('header');
+            if (header) {
+                const resetBtn = document.createElement('button');
+                resetBtn.className = 'ml-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700';
+                resetBtn.innerHTML = '<i class="fas fa-trash mr-2"></i>Reset DB (Debug)';
+                resetBtn.onclick = () => admin.resetAllUsers();
+                header.querySelector('div:last-child').appendChild(resetBtn);
+            }
+        }, 1000);
+        
+    </script>
+</body>
+</html>

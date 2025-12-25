@@ -6,7 +6,6 @@
     <title>Constitution de Dossier | Plateforme</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .fade-in {
@@ -298,12 +297,76 @@
 
         </footer>
     </div>
+<!-- Ajoutez à la fin du body -->
+<div id="whatsapp-helper" style="display: none;">
+    <!-- Sera affiché si WhatsApp ne s'ouvre pas -->
+</div>
+
+<script>
+// Fonction pour vérifier si WhatsApp s'est ouvert
+function checkWhatsAppOpened(phone, message) {
+    setTimeout(() => {
+        if (!document.hasFocus()) {
+            // WhatsApp s'est ouvert
+            console.log("WhatsApp ouvert avec succès");
+        } else {
+            // WhatsApp n'a pas pu s'ouvrir
+            showWhatsAppFallback(phone, message);
+        }
+    }, 1000);
+}
+
+function showWhatsAppFallback(phone, message) {
+    const helper = document.getElementById('whatsapp-helper');
+    helper.innerHTML = `
+        <div style="position: fixed; bottom: 20px; right: 20px; background: #25D366; color: white; padding: 15px; border-radius: 10px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fab fa-whatsapp" style="font-size: 24px;"></i>
+                <div>
+                    <p style="margin: 0; font-weight: bold;">Cliquez pour ouvrir WhatsApp</p>
+                    <a href="https://wa.me/${phone.replace('+', '')}?text=${encodeURIComponent(message)}" 
+                       target="_blank"
+                       style="color: white; text-decoration: underline; font-size: 14px;">
+                        Ouvrir manuellement
+                    </a>
+                </div>
+                <button onclick="this.parentElement.parentElement.style.display='none'" 
+                        style="background: none; border: none; color: white; cursor: pointer; margin-left: 10px;">
+                    ×
+                </button>
+            </div>
+        </div>
+    `;
+    helper.style.display = 'block';
+}
+</script>
 
     
 </body>
 <script src="script.js" defer></script>
 <script src="myhouse.js" defer></script>
+<script src="auth.js"></script>
+<script src="init.js" defer></script>
+
 
 
 
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

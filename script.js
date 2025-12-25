@@ -1,8 +1,18 @@
 
-let selectedDossier = '';
-let selectedFileType = '';
-
 function selectDossier(dossier) {
+    // Vérification d'authentification AJOUTÉE ICI
+    const user = JSON.parse(localStorage.getItem('current_user'));
+    
+    if (!user) {
+        alert("🔒 Veuillez vous connecter pour accéder aux dossiers.");
+        return;
+    }
+    
+    if (!user.user.validated) {
+        alert("⚠️ Votre compte n'est pas encore validé. Veuillez attendre la validation par l'administrateur.");
+        return;
+    }
+    
     selectedDossier = dossier;
     
     // UNIQUEMENT gérer ENERGINOVA
@@ -10,20 +20,178 @@ function selectDossier(dossier) {
         // Logique ENERGINOVA
         document.getElementById('selected-dossier-text').textContent = 'ENERGINOVA - Dossier énergie & innovation';
         document.getElementById('form-subtitle').textContent = 'Choisissez le document à ajouter à votre dossier ENERGINOVA';
-            document.getElementById('step1').classList.add('hidden');
-            document.getElementById('step2').classList.remove('hidden');
-            document.getElementById('step2').classList.add('fade-in');
-            
-            document.getElementById('backBtn').classList.remove('hidden');
-            document.getElementById('submit-text').textContent = 'Ajouter le fichier';
-            document.getElementById('help-text').textContent = 'Sélectionnez le type de fichier que vous souhaitez ajouter à votre dossier. Vous pourrez ensuite télécharger le document correspondant.';
-            
-            document.getElementById('submitBtn').disabled = true;
-        }
-        // Si c'est MYHOUSE, NE RIEN FAIRE ici
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
+        document.getElementById('step2').classList.add('fade-in');
+        
+        document.getElementById('backBtn').classList.remove('hidden');
+        document.getElementById('submit-text').textContent = 'Ajouter le fichier';
+        document.getElementById('help-text').textContent = 'Sélectionnez le type de fichier que vous souhaitez ajouter à votre dossier. Vous pourrez ensuite télécharger le document correspondant.';
+        
+        document.getElementById('submitBtn').disabled = true;
+        
+    } else if (dossier === 'myhouse') {
+        // POUR MYHOUSE - Rediriger vers la page myhouse.html
+        window.location.href = 'myhouse.html';
     }
+}
 
-    // ... toutes les autres fonctions ENERGINOVA
+
+
+
+
+
+
+
+let selectedDossier = '';
+let selectedFileType = '';
+
+function selectDossier(dossier) {
+    // Vérification d'authentification
+    const user = JSON.parse(localStorage.getItem('current_user'));
+    
+    if (!user) {
+        alert("🔒 Veuillez vous connecter pour accéder aux dossiers.");
+        return;
+    }
+    
+    if (!user.user.validated) {
+        alert("⚠️ Votre compte n'est pas encore validé. Veuillez attendre la validation par l'administrateur.");
+        return;
+    }
+    
+    selectedDossier = dossier;
+    
+    if (dossier === 'energinova') {
+        // Logique ENERGINOVA
+        document.getElementById('selected-dossier-text').textContent = 'ENERGINOVA - Dossier énergie & innovation';
+        document.getElementById('form-subtitle').textContent = 'Choisissez le document à ajouter à votre dossier ENERGINOVA';
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
+        document.getElementById('step2').classList.add('fade-in');
+        
+        document.getElementById('backBtn').classList.remove('hidden');
+        document.getElementById('submit-text').textContent = 'Ajouter le fichier';
+        document.getElementById('help-text').textContent = 'Sélectionnez le type de fichier que vous souhaitez ajouter à votre dossier. Vous pourrez ensuite télécharger le document correspondant.';
+        
+        document.getElementById('submitBtn').disabled = true;
+        
+    } else if (dossier === 'myhouse') {
+        // Logique MYHOUSE
+        document.getElementById('selected-dossier-text').textContent = 'MYHOUSE - Dossier logement & propriété';
+        document.getElementById('form-subtitle').textContent = 'Choisissez le document à ajouter à votre dossier MYHOUSE';
+        
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
+        document.getElementById('step2').classList.add('fade-in');
+        
+        document.getElementById('backBtn').classList.remove('hidden');
+        document.getElementById('submit-text').textContent = 'Ajouter le fichier';
+        document.getElementById('help-text').textContent = 'Sélectionnez le type de fichier que vous souhaitez ajouter à votre dossier. Vous pourrez ensuite télécharger le document correspondant.';
+        
+        document.getElementById('submitBtn').disabled = true;
+        
+        // Changer les options pour MYHOUSE
+        updateFileOptionsForMyHouse();
+    }
+}
+
+function updateFileOptionsForMyHouse() {
+    const fileGrid = document.querySelector('.grid.grid-cols-1');
+    if (fileGrid) {
+        fileGrid.innerHTML = `
+            <!-- Options MYHOUSE -->
+            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-green-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="devis">
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-14 h-14 bg-green-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
+                        <i class="fas fa-file-invoice-dollar text-green-600 text-2xl"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-1">Devis</h4>
+                    <p class="text-gray-500 text-sm">Estimation des coûts MYHOUSE</p>
+                </div>
+            </div>
+            
+            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-green-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="facture">
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-14 h-14 bg-green-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
+                        <i class="fas fa-file-invoice text-green-600 text-2xl"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-1">Facture</h4>
+                    <p class="text-gray-500 text-sm">Document comptable MYHOUSE</p>
+                </div>
+            </div>
+            
+            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-green-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="attestation_realisation">
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-14 h-14 bg-green-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
+                        <i class="fas fa-file-certificate text-green-600 text-2xl"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-1">Attestation de réalisation</h4>
+                    <p class="text-gray-500 text-sm">Document attestant des travaux MYHOUSE</p>
+                </div>
+            </div>
+            
+            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-green-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="attestation_signataire">
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-14 h-14 bg-green-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
+                        <i class="fas fa-file-signature text-green-600 text-2xl"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-1">Attestation signataire</h4>
+                    <p class="text-gray-500 text-sm">Document avec signature MYHOUSE</p>
+                </div>
+            </div>
+            
+            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-green-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="cdc">
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-14 h-14 bg-green-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
+                        <i class="fas fa-clipboard-list text-green-600 text-2xl"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-1">Cahier des charges</h4>
+                    <p class="text-gray-500 text-sm">Spécifications techniques MYHOUSE</p>
+                </div>
+            </div>
+            
+            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-green-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="rapport">
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-14 h-14 bg-green-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
+                        <i class="fas fa-file-alt text-green-600 text-2xl"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-1">Rapport</h4>
+                    <p class="text-gray-500 text-sm">Document d'analyse MYHOUSE</p>
+                </div>
+            </div>
+        `;
+        
+        // Réinitialiser les écouteurs
+        document.querySelectorAll('.file-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.file-option').forEach(opt => {
+                    opt.classList.remove('border-green-500', 'bg-green-50');
+                    opt.classList.add('border-gray-200');
+                });
+                
+                this.classList.remove('border-gray-200');
+                this.classList.add('border-green-500', 'bg-green-50');
+                
+                selectedFileType = this.getAttribute('data-value');
+                document.getElementById('selected_file_type').value = selectedFileType;
+                
+                const fileName = this.querySelector('h4').textContent;
+                document.getElementById('selected-file-name').textContent = fileName;
+                document.getElementById('selected-file-indicator').classList.remove('hidden');
+                
+                // Charger le formulaire correspondant
+                if (selectedDossier === 'myhouse') {
+                    loadMyhouseForm(selectedFileType);
+                } else {
+                    loadFormFor(selectedFileType);
+                }
+                
+                document.getElementById('submitBtn').disabled = false;
+            });
+        });
+    }
+}
 
 
 function goBackToStep1() {
