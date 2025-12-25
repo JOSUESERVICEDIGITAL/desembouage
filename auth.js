@@ -286,7 +286,8 @@ resetAllPasswords() {
                 </div>
                 
                 <!-- Formulaire d'Inscription -->
-                <div id="registerForm" class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 hidden">
+
+    <div id="registerForm" class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 hidden">
                     <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
                         <p class="text-blue-800 text-sm">
                             <i class="fas fa-info-circle mr-2"></i>
@@ -294,111 +295,116 @@ resetAllPasswords() {
                             Si vous étiez déjà inscrit avec un email, veuillez vous réinscrire avec votre numéro de téléphone.
                         </p>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-6">
-                        <i class="fas fa-user-plus mr-2"></i>
-                        Créer un compte
-                    </h3>
-                    
-                    <div class="space-y-5">
-                        <div class="grid grid-cols-2 gap-4">
-    <div>
-        <label for="registerLastName" class="block text-gray-700 font-medium mb-2">
-            <i class="fas fa-user mr-2"></i>
-            Nom
-        </label>
-        <input type="text" 
-               id="registerLastName"
-               class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
-               placeholder="Votre nom"
-               required>
-    </div>
-    <div>
-        <label for="registerFirstName" class="block text-gray-700 font-medium mb-2">
-            <i class="fas fa-user mr-2"></i>
-            Prénom
-        </label>
-        <input type="text" 
-               id="registerFirstName"
-               class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
-               placeholder="Votre prénom"
-               required>
-    </div>
-</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-user-plus mr-2"></i>
+                    Créer un compte
+                </h3>
+    
+    <div class="space-y-5">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label for="registerLastName" class="block text-gray-700 font-medium mb-2">
+                                                <i class="fas fa-user mr-2"></i>
+                                                Nom
+                                            </label>
+                                            <input type="text" 
+                                                id="registerLastName"
+                                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
+                                                placeholder="Votre nom"
+                                                required>
+                                        </div>
+                                        <div>
+                                            <label for="registerFirstName" class="block text-gray-700 font-medium mb-2">
+                                                <i class="fas fa-user mr-2"></i>
+                                                Prénom
+                                            </label>
+                                            <input type="text" 
+                                                id="registerFirstName"
+                                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
+                                                placeholder="Votre prénom"
+                                                required>
+                                        </div>
+                                    </div>
 
-<div>
-    <label for="registerPhone" class="block text-gray-700 font-medium mb-2">
-        <i class="fas fa-phone mr-2"></i>
-        Numéro de téléphone WhatsApp
-    </label>
-    <input type="tel" 
-           id="registerPhone"
-           class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
-           placeholder="+212612345678"
-           required
-           pattern="^\+[0-9]{10,15}$"
-           title="Format international: +212612345678">
-</div>
+                                    <div>
+                                        <label for="registerPhone" class="block text-gray-700 font-medium mb-2">
+                                            <i class="fas fa-phone mr-2"></i>
+                                            Numéro de téléphone WhatsApp
+                                        </label>
+                                        <input type="tel" 
+                                            id="registerPhone"
+                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
+                                            placeholder="+212612345678"
+                                            required
+                                            pattern="^\+[0-9]{10,15}$"
+                                            title="Format international: +212612345678">
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            Format international (ex: +212612345678). Ce numéro recevra les codes OTP.
+                                        </p>
+                                    </div>
 
-<div>
-    <label for="registerPassword" class="block text-gray-700 font-medium mb-2">
-        <i class="fas fa-lock mr-2"></i>
-        Mot de passe
-    </label>
-    <input type="password" 
-           id="registerPassword"
-           class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
-           placeholder="Minimum 8 caractères"
-           required
-           minlength="8">
-</div>
+                                    <div>
+                                        <label for="registerPassword" class="block text-gray-700 font-medium mb-2">
+                                            <i class="fas fa-lock mr-2"></i>
+                                            Mot de passe
+                                        </label>
+                                        <input type="password" 
+                                            id="registerPassword"
+                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
+                                            placeholder="Minimum 8 caractères"
+                                            required
+                                            minlength="8">
+                                    </div>
 
-<div>
-    <label for="registerConfirmPassword" class="block text-gray-700 font-medium mb-2">
-        <i class="fas fa-lock mr-2"></i>
-        Confirmer le mot de passe
-    </label>
-    <input type="password" 
-           id="registerConfirmPassword"
-           class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
-           placeholder="Retapez votre mot de passe"
-           required
-           minlength="8">
-</div>
-                </div>
-                
-                <!-- Message d'attente validation -->
-                <div id="pendingRegistration" class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 hidden">
-                    <div class="text-center py-8">
-                        <div class="inline-flex items-center justify-center w-20 h-20 bg-yellow-100 rounded-full mb-6">
-                            <i class="fas fa-clock text-yellow-600 text-3xl"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold text-gray-800 mb-4">
-                            Demande envoyée !
-                        </h3>
-                        <p class="text-gray-600 mb-6">
-                            Votre inscription a été envoyée à l'administrateur.
-                            Un message WhatsApp lui a été envoyé pour validation.
-                        </p>
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6">
-                            <p class="text-gray-700 mb-2">
-                                <i class="fab fa-whatsapp text-green-600 mr-2"></i>
-                                Message envoyé à l'administrateur :
-                            </p>
-                            <div class="bg-white p-3 rounded-lg border text-sm text-left">
-                                <p><strong>Nouvelle inscription :</strong></p>
-                                <p>👤 <span id="pendingName"></span></p>
-                                <p>📞 <span id="pendingPhone"></span></p>
-                            </div>
-                        </div>
-                        <button onclick="auth.switchToLogin()"
-                                class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">
-                            <i class="fas fa-sign-in-alt mr-2"></i>
-                            Revenir à la connexion
-                        </button>
-                    </div>
+                                    <div>
+                                        <label for="registerConfirmPassword" class="block text-gray-700 font-medium mb-2">
+                                            <i class="fas fa-lock mr-2"></i>
+                                            Confirmer le mot de passe
+                                        </label>
+                                        <input type="password" 
+                                            id="registerConfirmPassword"
+                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
+                                            placeholder="Retapez votre mot de passe"
+                                            required
+                                            minlength="8">
+                                    </div>
+
+                            <!-- BOUTON D'INSCRIPTION AJOUTÉ ICI -->
+                            <button type="button"
+                                    onclick="auth.register()"
+                                    class="w-full py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-bold rounded-xl hover:from-green-700 hover:to-green-800 hover:shadow-xl transition-all duration-200 mt-4">
+                                <i class="fas fa-user-plus mr-2"></i>
+                                S'inscrire maintenant
+                            </button>
+
+        <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 mt-4">
+            <div class="flex items-start">
+                <i class="fas fa-info-circle text-yellow-600 text-xl mt-1 mr-3"></i>
+                <div>
+                    <p class="text-yellow-800 font-medium mb-1">
+                        <i class="fab fa-whatsapp mr-2 text-green-600"></i>
+                        Validation par WhatsApp
+                    </p>
+                    <p class="text-yellow-700 text-sm">
+                        Un message WhatsApp sera envoyé à l'administrateur pour validation de votre compte.
+                        Vous pourrez vous connecter une fois votre compte validé.
+                    </p>
                 </div>
             </div>
-        `;
+        </div>
+    </div>
+    
+    <div class="mt-6 pt-6 border-t border-gray-100">
+        <p class="text-center text-gray-600">
+            Déjà inscrit ? 
+            <button onclick="auth.switchToLogin()" 
+                    class="text-blue-600 hover:text-blue-800 font-medium">
+                Connectez-vous ici
+            </button>
+        </p>
+    </div>
+</div>`;
+        
         
         // Initialiser les écouteurs d'onglets
         document.getElementById('loginTab').addEventListener('click', () => this.switchTab('login'));
