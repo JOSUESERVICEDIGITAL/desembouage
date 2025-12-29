@@ -45,7 +45,21 @@ function getFieldValue(fieldName, formData) {
     return value;
 }
 
+
+
+
+
+// ============================================
+// VARIABLES POUR CALIBRI MYHOUSE
+// ============================================
 let myhouseSelectedFileType = '';
+const myhousePdfCache = new Map();
+
+// Chemins vers les fichiers Calibri LOCAUX pour MYHOUSE
+const myhouseCalibriUrls = {
+    regular: "./fonts/calibri-regular.ttf",        // Même dossier que script.js
+    bold: "./fonts/calibri-bold.ttf"      // Même dossier que script.js
+};
 
 
 
@@ -1149,24 +1163,16 @@ async function generateMyhouseCdc() {
     }
 }
 
-
+// ============================================
+// FONCTION PRINCIPALE MYHOUSE AVEC CALIBRI
+// ============================================
 async function generateMyhousePdf(formData, type) {
-    // OPTIMISATION : Validation préalable
+    // Validation des données
     if (!formData || typeof formData !== 'object') {
         console.error("❌ Données MYHOUSE invalides");
         alert("❌ Les données du formulaire sont invalides.");
         return;
     }
-    
-    // Valider les dates
-    Object.keys(formData).forEach(key => {
-        if (key.includes('date') && formData[key]) {
-            const year = formData[key].split('-')[0];
-            if (year && parseInt(year) > 2100) {
-                console.warn(`⚠️ Date suspecte détectée pour ${key}: ${formData[key]}`);
-            }
-        }
-    });
     
     const myhousePdfMap = {
         attestation_signataire: "PDFS/myhouse_attestation_signataire.pdf",
@@ -1183,16 +1189,56 @@ async function generateMyhousePdf(formData, type) {
     }
 
     try {
-        console.time(`Génération PDF MYHOUSE ${type}`); // AJOUTER ICI
+        console.time(`Génération PDF MYHOUSE ${type}`);
         
+        // 1. Charger le template PDF
         const existingPdf = await fetch(myhousePdfMap[type]).then(res => res.arrayBuffer());
         const { PDFDocument, StandardFonts, rgb } = PDFLib;
+        
+        // 2. Créer le document PDF avec fontkit
         const pdfDoc = await PDFDocument.load(existingPdf);
+        
+        // VÉRIFIER ET ENREGISTRER FONTKIT POUR MYHOUSE
+        if (typeof fontkit !== 'undefined') {
+            pdfDoc.registerFontkit(fontkit);
+            console.log("✅ Fontkit enregistré pour MYHOUSE");
+        } else {
+            console.warn("⚠️ Fontkit non disponible pour MYHOUSE");
+        }
+        
         const pages = pdfDoc.getPages();
 
-        const fontNormal = await pdfDoc.embedFont(StandardFonts.Helvetica);
-        const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+        // 3. Charger les polices Calibri pour MYHOUSE
+        console.log("🔄 Chargement des polices Calibri pour MYHOUSE...");
+        let calibriRegular, calibriBold;
+        
+        try {
+            // Essayer de charger Calibri Regular
+            console.log("Tentative de chargement:", myhouseCalibriUrls.regular);
+            const regularResponse = await fetch(myhouseCalibriUrls.regular);
+            if (!regularResponse.ok) throw new Error(`Calibri Regular non trouvé (${regularResponse.status})`);
+            const regularBytes = await regularResponse.arrayBuffer();
+            calibriRegular = await pdfDoc.embedFont(regularBytes);
+            
+            // Essayer de charger Calibri Bold
+            console.log("Tentative de chargement:", myhouseCalibriUrls.bold);
+            const boldResponse = await fetch(myhouseCalibriUrls.bold);
+            if (!boldResponse.ok) throw new Error(`Calibri Bold non trouvé (${boldResponse.status})`);
+            const boldBytes = await boldResponse.arrayBuffer();
+            calibriBold = await pdfDoc.embedFont(boldBytes);
+            
+            console.log("✅ Calibri chargée pour MYHOUSE !");
+            
+        } catch (fontError) {
+            console.warn("❌ Échec chargement Calibri MYHOUSE:", fontError.message);
+            console.log("↪️ Utilisation d'Helvetica comme fallback pour MYHOUSE");
+            
+            // Fallback sur Helvetica
+            calibriRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            calibriBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+        }
 
+        // 4. Récupérer les coordonnées MYHOUSE
         const coords = myhousePdfCoordinates[type];
         if (!coords) {
             console.error(`Coordonnées MYHOUSE non définies pour ${type}`);
@@ -1200,9 +1246,10 @@ async function generateMyhousePdf(formData, type) {
             return;
         }
 
-        console.log(`=== GÉNÉRATION MYHOUSE ${type.toUpperCase()} ===`);
+        console.log(`=== GÉNÉRATION MYHOUSE ${type.toUpperCase()} AVEC CALIBRI ===`);
         console.log("Données MYHOUSE:", formData);
 
+        // 5. Remplir le PDF MYHOUSE avec Calibri
         pages.forEach((page, index) => {
             const pageKey = `page${index + 1}`;
             
@@ -1210,13 +1257,16 @@ async function generateMyhousePdf(formData, type) {
                 Object.entries(coords[pageKey]).forEach(([fieldName, coord]) => {
                     let value = getFieldValue(fieldName, formData);
                     
-                    if (fieldName.includes("date")) {
+                    // Formater les dates
+                    if (fieldName.includes("date") || fieldName.includes("signature")) {
                         value = formatDateFR(value);
                     }
 
                     if (value && value.trim() !== "") {
-                        const font = coord.bold ? fontBold : fontNormal;
+                        // Choisir la police Calibri (bold ou regular)
+                        const font = coord.bold ? calibriBold : calibriRegular;
                         
+                        // Choisir la couleur
                         let color;
                         switch(coord.color) {
                             case 'white':
@@ -1229,17 +1279,17 @@ async function generateMyhousePdf(formData, type) {
                                 color = rgb(0.45, 0.50, 0.19);
                                 break;
                             case 'light_blue':
-                                color = rgb(0.4, 0.7, 1); // AJOUTER pour prime_cee_cdc
+                                color = rgb(0.4, 0.7, 1);
                                 break;
                             case 'red':
-                                color = rgb(1, 0, 0); // AJOUTER pour date_cdc
+                                color = rgb(1, 0, 0);
                                 break;
                             case 'black':
                             default:
                                 color = rgb(0, 0, 0);
                         }
                         
-                        console.log(`Écriture MYHOUSE ${type} - ${fieldName}: "${value}" à (${coord.x}, ${coord.y})`);
+                        console.log(`Écriture MYHOUSE ${type} - ${fieldName}: "${value}" à (${coord.x}, ${coord.y}) avec Calibri`);
                         
                         try {
                             page.drawText(value, {
@@ -1257,26 +1307,43 @@ async function generateMyhousePdf(formData, type) {
             }
         });
 
+        // 6. Générer et télécharger le PDF MYHOUSE
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: "application/pdf" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
         
+        const link = document.createElement("a");
+        link.href = url;
+        
+        // Nom du fichier MYHOUSE
         const fileName = `myhouse_${type}_${formData.reference_devis || formData.reference_facture || Date.now()}.pdf`;
         link.download = fileName;
-        link.click();
         
-        console.log(`✅ MYHOUSE ${type.toUpperCase()} généré: ${fileName}`);
-        console.timeEnd(`Génération PDF MYHOUSE ${type}`); // AJOUTER ICI
+        // Ajouter au DOM, cliquer et nettoyer
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Libérer la mémoire
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        
+        console.log(`✅ MYHOUSE ${type.toUpperCase()} généré avec Calibri: ${fileName}`);
+        console.timeEnd(`Génération PDF MYHOUSE ${type}`);
+        
         return true;
 
     } catch (error) {
         console.error("❌ Erreur PDF MYHOUSE:", error);
-        console.timeEnd(`Génération PDF MYHOUSE ${type}`); // AJOUTER ICI (même en cas d'erreur)
+        console.timeEnd(`Génération PDF MYHOUSE ${type}`);
         alert(`❌ Erreur lors de la génération du document MYHOUSE ${type}.`);
         throw error;
     }
 }
+
+
+
+
+
 const myhousePdfCoordinates = {
     devis: {
         page1: {
@@ -1455,4 +1522,64 @@ async function generateMyhouseFromDynamicForm(type) {
 }
 
 
+
+
+// ============================================
+// FONCTION DE TEST CALIBRI POUR MYHOUSE
+// ============================================
+async function testMyhouseCalibri() {
+    console.log("🧪 Test Calibri pour MYHOUSE...");
+    
+    try {
+        // Tester si fontkit est disponible
+        if (typeof fontkit === 'undefined') {
+            console.error("❌ Fontkit non chargé pour MYHOUSE !");
+            alert("❌ Fontkit non chargé. Vérifie les scripts dans myhouse.html");
+            return;
+        }
+        
+        // Tester si les fichiers Calibri existent
+        const test1 = await fetch('./fonts/calibri.ttf');
+        const test2 = await fetch('./fonts/calibri-bold.ttf');
+        
+        console.log("📁 Fichiers Calibri pour MYHOUSE:");
+        console.log("calibri-regular.ttf:", test1.ok ? "✅ OK" : "❌ MANQUANT");
+        console.log("calibri-bold.ttf:", test2.ok ? "✅ OK" : "❌ MANQUANT");
+        
+        if (test1.ok && test2.ok) {
+            alert("✅ Tous les fichiers Calibri sont présents pour MYHOUSE !");
+            
+            // Tester la création d'un PDF simple
+            const { PDFDocument, rgb } = PDFLib;
+            const pdfDoc = await PDFDocument.create();
+            pdfDoc.registerFontkit(fontkit);
+            
+            const regularResponse = await fetch('./fonts/calibri.ttf');
+            const regularBytes = await regularResponse.arrayBuffer();
+            const calibriFont = await pdfDoc.embedFont(regularBytes);
+            
+            const page = pdfDoc.addPage([400, 200]);
+            page.drawText("✅ CALIBRI FONCTIONNE POUR MYHOUSE !", {
+                x: 50, y: 150, size: 16, font: calibriFont, color: rgb(0, 0.4, 0.2)
+            });
+            
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'test_calibri_myhouse.pdf';
+            link.click();
+            
+        } else {
+            alert("❌ Vérifie que les fichiers sont dans le dossier fonts/ pour MYHOUSE");
+        }
+        
+    } catch (error) {
+        console.error("Erreur test MYHOUSE:", error);
+        alert("❌ Erreur test Calibri MYHOUSE: " + error.message);
+    }
+}
+
+// Ajoute un bouton de test dans ton myhouse.html
+// <button onclick="testMyhouseCalibri()" class="mt-4 px-4 py-2 bg-green-600 text-white rounded">🧪 Test Calibri MYHOUSE</button>
 
