@@ -228,22 +228,63 @@ const fileForms = {
         { name: "date_facture", label: "Date de la facture", type: "date", required: true, example: "10/10/2025" },
     ],
     
-    rapport: [
+    cdc: [
+            { name: "prime_cee", label: "Prime CEE pour CDC", readonly: true },
+            { name: "date_devis", label: "Date du devis", readonly: true },
+            
+        ],
+
+
+
+
+          rapport: [
+        // Adresses (saisie manuelle)
         { name: "adresse_travaux_1", label: "Adresse des travaux (1)", required: true },
         { name: "boite_postale_1", label: "Boîte postale + Zone (1)", required: true },
         { name: "adresse_travaux_2", label: "Adresse des travaux (2) - Facultatif", required: false },
-        { name: "boite_postale_2", label: "Boîte postale + Zone (2) - Facultatif", required: false }
-    ]
+
+        
+        // Champs provenant de la FACTURE (readonly)
+        { name: "date_facture", label: "Date facture", readonly: true },
+      
+        // Champs provenant du DEVIS (readonly)
+        { name: "reference_devis", label: "Numéro de devis", readonly: true },
+        { name: "puissance_chaudiere", label: "Puissance chaudière", readonly: true },
+        { name: "nombre_emetteurs", label: "Nombre d'émetteurs", readonly: true },
+        { name: "volume_circuit", label: "Volume circuit", readonly: true }
+    ],
+
+
+
+
+
+
+
+
+
+
+
+    
 };
+
 
 function loadFormFor(type) {
     const container = document.getElementById("dynamic-fields");
     container.innerHTML = "";
     document.getElementById("dynamic-form").classList.remove("hidden");
 
-    // Logique spécifique pour chaque type
-    if (type === "cdc" || type === "facture" || type === "rapport") {
-        const lastDevisData = localStorage.getItem("lastDevisData");
+    // Liste de TOUS les types qui dépendent du devis
+    const typesDependants = ["facture", "attestation_realisation", "cdc", "rapport"];
+    
+    // Récupérer les données du devis ET de la facture
+    let lastDevisData = null;
+    let lastFactureData = null;
+    
+    if (typesDependants.includes(type)) {
+        lastDevisData = JSON.parse(localStorage.getItem("lastDevisData") || "null");
+        lastFactureData = JSON.parse(localStorage.getItem("lastFactureData") || "null");
+        
+        // Vérifier si un devis existe (obligatoire)
         if (!lastDevisData) {
             container.innerHTML = `
                 <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
@@ -251,13 +292,13 @@ function loadFormFor(type) {
                         <i class="fas fa-exclamation-triangle text-red-600 text-xl mt-1"></i>
                         <div>
                             <h4 class="font-bold text-red-700 mb-2">Devis requis !</h4>
-                            <p class="text-red-600 mb-3">Vous devez d'abord générer un devis.</p>
+                            <p class="text-red-600 mb-3">Vous devez d'abord générer un devis pour créer un ${type}.</p>
                             <div class="flex gap-3">
                                 <button onclick="createDevisFirst()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                                    <i class="fas fa-file-invoice-dollar mr-2"></i>Créer un devis
+                                    <i class="fas fa-file-invoice-dollar mr-2"></i>Créer un devis d'abord
                                 </button>
                                 <button onclick="goBackToStep1()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
-                                    <i class="fas fa-arrow-left mr-2"></i>Retour
+                                    <i class="fas fa-arrow-left mr-2"></i>Retour au choix
                                 </button>
                             </div>
                         </div>
@@ -267,29 +308,122 @@ function loadFormFor(type) {
             document.getElementById('submitBtn').disabled = true;
             return;
         }
+        
+        // Pour le rapport, vérifier si une facture existe (recommandé mais pas obligatoire)
+        if (type === 'rapport' && !lastFactureData) {
+            container.innerHTML += `
+                <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-exclamation-triangle text-yellow-600 text-xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold text-yellow-700 mb-2">Facture recommandée</h4>
+                            <p class="text-yellow-600">Aucune facture trouvée. Le rapport sera généré sans date de facture.</p>
+                            <p class="text-yellow-600 text-sm mt-2">Conseil : Créez d'abord une facture pour avoir une date complète.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
     }
 
     // Créer les champs du formulaire
     if (fileForms[type]) {
         fileForms[type].forEach(field => {
             const placeholder = field.example || "";
+            let defaultValue = "";
+            
+            // 1. D'abord chercher dans le formulaire actuel (si reload)
+            // (c'est géré automatiquement par le navigateur)
+            
+            // 2. Chercher dans les données de facture (pour le rapport)
+            if (type === 'rapport' && field.name === "date_facture" && lastFactureData && lastFactureData[field.name]) {
+                defaultValue = lastFactureData[field.name];
+            }
+            // 3. Chercher dans les données du devis
+            else if (lastDevisData && lastDevisData[field.name]) {
+                defaultValue = lastDevisData[field.name];
+            }
+            
+            // Si le champ est readonly, forcer la valeur
+            if (field.readonly && defaultValue) {
+                // Ne rien changer, defaultValue est déjà défini
+            }
+            
             container.innerHTML += `
                 <label class="block mb-4">
                     <span class="text-gray-700 font-medium">
                         ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ''}
+                        ${field.readonly ? '<span class="text-blue-500 text-xs ml-2">(auto)</span>' : ''}
                     </span>
                     <input
                         type="${field.type || 'text'}"
                         name="${field.name}"
+                        value="${defaultValue}"
                         placeholder="${placeholder}"
-                        class="w-full mt-1 px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-2 focus:ring-blue-200 focus:outline-none transition"
+                        class="w-full mt-1 px-4 py-3 border-2 ${field.readonly ? 'bg-gray-100 border-gray-300' : 'border-gray-300'} rounded-xl focus:border-blue-600 focus:ring-2 focus:ring-blue-200 focus:outline-none transition"
                         ${field.required ? 'required' : ''}
                         ${field.readonly ? 'readonly' : ''}
                     >
                     ${field.example ? `<p class="text-xs text-gray-500 mt-1">Exemple: ${field.example}</p>` : ''}
+                    ${field.readonly && defaultValue ? `
+                        <p class="text-xs text-green-600 mt-1">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            ${field.name === 'date_facture' ? 'Rempli depuis la facture' : 'Rempli depuis le devis'}
+                        </p>
+                    ` : ''}
                 </label>
             `;
         });
+
+        // Ajouter un panneau d'information amélioré
+        if (typesDependants.includes(type) && lastDevisData) {
+            let infoHTML = `
+                <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-info-circle text-blue-600 text-xl mt-1"></i>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-blue-700 mb-2">Données importées</h4>
+                            <div class="grid grid-cols-2 gap-2 text-sm mb-3">
+                                <div><span class="font-medium">Devis n°:</span> ${lastDevisData.reference_devis || 'Non spécifié'}</div>
+                                <div><span class="font-medium">Date devis:</span> ${formatDateFR(lastDevisData.date_devis) || 'Non spécifiée'}</div>
+                                <div><span class="font-medium">Adresse:</span> ${(lastDevisData.adresse_travaux || '').substring(0, 30)}...</div>
+            `;
+            
+            // Ajouter info facture si disponible
+            if (lastFactureData) {
+                infoHTML += `
+                    <div class="col-span-2 mt-2 p-2 bg-green-50 rounded-lg">
+                        <div class="font-medium text-green-700">Facture disponible</div>
+                        <div class="text-green-600 text-xs">
+                            Date: ${formatDateFR(lastFactureData.date_facture) || 'Non spécifiée'}
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'rapport') {
+                infoHTML += `
+                    <div class="col-span-2 mt-2 p-2 bg-yellow-50 rounded-lg">
+                        <div class="font-medium text-yellow-700">⚠️ Aucune facture</div>
+                        <div class="text-yellow-600 text-xs">
+                            La date de facture sera vide. Créez une facture d'abord.
+                        </div>
+                    </div>
+                `;
+            }
+            
+            infoHTML += `
+                            </div>
+                            <button type="button" onclick="reimportAllData('${type}')" 
+                                class="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                                <i class="fas fa-sync-alt"></i>
+                                Actualiser toutes les données
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML += infoHTML;
+        }
 
         container.innerHTML += `
             <div class="pt-4 border-t border-gray-200">
@@ -320,6 +454,7 @@ const pdfCoordinates = {
             adresse_travaux: { x: 105, y: 505, size: 8, color: 'black' },
             numero_immatriculation: { x: 205, y: 495.5, size: 8, color: 'black' },
             nom_residence: { x: 268, y: 495.5, size: 8, color: 'black' },
+            zone_climatique: { x: 107, y: 485.5, size: 8, color: 'black' },
             parcelle_1: { x: 54, y: 462, size: 8, color: 'black' },
             parcelle_2: { x: 190, y: 462, size: 8, color: 'black' },
             parcelle_3: { x: 54, y: 449, size: 8, color: 'black' },
@@ -349,11 +484,11 @@ const pdfCoordinates = {
         page4: {
             reference_devis: { x: 216, y: 733, size: 12, color: 'white', bold: true },
             date_devis: { x: 139, y: 718, size: 10.5, color: 'white', bold: true },
-            montant_ht: { x: 522, y: 383, size: 8, color: 'darkblue', bold: false },
+            montant_ht: { x: 522, y: 383, size: 8, color: 'darkblue', bold: true },
             montant_tva: { x: 522, y: 371, size: 8, color: 'darkblue', bold: true },
             montant_ttc: { x: 522, y: 361, size: 8, color: 'darkblue', bold: true },
             prime_cee: { x: 522, y: 350, size: 8, color: 'darkblue', bold: true },
-            prime_cee_dup: { x: 78.5, y: 277.5, size: 7, color: 'black', bold: true },
+            prime_cee_dup: { x: 78.5, y: 277.5, size: 7, color: 'black', bold: false },
             reste_a_charge: { x: 522, y: 315, size: 8, color: 'darkblue', bold: true },
             montant_ht_dup: { x: 77, y: 277, size: 7, color: 'black' }
         },
@@ -365,15 +500,16 @@ const pdfCoordinates = {
     
     facture: {
          page1: {
-            reference_devis: { x: 216, y: 733, size: 12, color: 'white', bold: true },
+            reference_devis: { x: 214, y: 733.2, size: 12, color: 'white', bold: true },
             date_facture: { x: 139, y: 718, size: 10.5, color: 'white', bold: true }, // Remplace date_devis
-            adresse_travaux: { x: 104, y: 505, size: 8, color: 'black' },
-            numero_immatriculation: { x: 205, y: 495, size: 8, color: 'black' },
-            nom_residence: { x: 268, y: 495, size: 8, color: 'black' },
-            parcelle_1: { x: 84, y: 462, size: 7, color: 'black' },
-            parcelle_2: { x: 224, y: 462, size: 7, color: 'black' },
-            parcelle_3: { x: 84, y: 449, size: 7, color: 'black' },
-            parcelle_4: { x: 224, y: 449, size: 7, color: 'black' },
+            adresse_travaux: { x: 105, y: 505, size: 8, color: 'black' },
+            numero_immatriculation: { x: 205, y: 495.5, size: 8, color: 'black' },
+            nom_residence: { x: 268, y: 495.5, size: 8, color: 'black' },
+            zone_climatique: { x: 107, y: 485.5, size: 8, color: 'black' },
+            parcelle_1: { x: 54, y: 462, size: 8, color: 'black' },
+            parcelle_2: { x: 190, y: 462, size: 8, color: 'black' },
+            parcelle_3: { x: 54, y: 449, size: 8, color: 'black' },
+            parcelle_4: { x: 190, y: 449, size: 8, color: 'black' },
             dates_previsionnelles: { x: 174, y: 428, size: 7, color: 'black' },
             nombre_batiments: { x: 124, y: 400, size: 8, color: 'black' },
             details_batiments: { x: 72, y: 391, size: 8, color: 'black' },
@@ -381,9 +517,10 @@ const pdfCoordinates = {
             prime_cee_dup: { x: 468, y: 348, size: 7, color: 'black' }
         },
         page2: {
-            reference_devis: { x: 216, y: 733, size: 12, color: 'white', bold: true },
+            reference_devis: { x: 214, y: 733, size: 12, color: 'white', bold: true },
             date_facture: { x: 139, y: 718, size: 10.5, color: 'white', bold: true }, // Remplace date_devis
-            puissance_chaudiere: { x: 198, y: 632, size: 7, color: 'black' },
+             puissance_chaudiere: { x: 198, y: 632, size: 7, color: 'black' },
+            zone_climatique: { x: 135, y: 579.5, size: 8, color: 'black' },
             nombre_logements: { x: 189, y: 622, size: 7, color: 'black' },
             nombre_emetteurs: { x: 195, y: 611, size: 7, color: 'black' },
             volume_circuit: { x: 179, y: 590, size: 7, color: 'black' },
@@ -392,16 +529,17 @@ const pdfCoordinates = {
             prime_cee: { x: 120, y: 538, size: 7, color: 'black' }
         },
         page3: {
-            reference_devis: { x: 216, y: 733, size: 12, color: 'white', bold: true },
+            reference_devis: { x: 214, y: 733, size: 12, color: 'white', bold: true },
             date_facture: { x: 139, y: 718, size: 10.5, color: 'white', bold: true } // Remplace date_devis
         },
         page4: {
-            reference_devis: { x: 216, y: 733, size: 12, color: 'white', bold: true },
+            reference_devis: { x: 214, y: 733, size: 12, color: 'white', bold: true },
             date_facture: { x: 139, y: 718, size: 10.5, color: 'white', bold: true }, // Remplace date_devis
             montant_ht: { x: 522, y: 383, size: 8, color: 'darkblue', bold: true },
             montant_tva: { x: 522, y: 371, size: 8, color: 'darkblue', bold: true },
             montant_ttc: { x: 522, y: 361, size: 8, color: 'darkblue', bold: true },
             prime_cee: { x: 522, y: 350, size: 8, color: 'darkblue', bold: true },
+            prime_cee_dup: { x: 78.5, y: 277.5, size: 7, color: 'black', bold: false },
             reste_a_charge: { x: 522, y: 315, size: 8, color: 'darkblue', bold: true },
             montant_ht_dup: { x: 77, y: 277, size: 7, color: 'black' }
         }
@@ -419,25 +557,139 @@ const pdfCoordinates = {
     attestation_realisation: {
         page1: {
             nombre_logements: { x: 186, y: 419, size: 8, color: 'black', bold: false },
-            adresse_travaux: { x: 186, y: 449, size: 8, color: 'black', bold: false },
+            adresse_travaux: { x: 186, y: 447, size: 8, color: 'black', bold: false },
             puissance_chaudiere: { x: 186, y: 395, size: 8, color: 'black', bold: false },
             nombre_emetteurs: { x: 186, y: 385, size: 8, color: 'black', bold: false },
             volume_circuit: { x: 186, y: 364, size: 8, color: 'black', bold: false },
-            nombre_batiments: { x: 186, y: 314, size: 8, color: 'black', bold: false },
+            nombre_batiments: { x: 189, y: 314, size: 8, color: 'black', bold: false },
             details_batiments: { x: 186, y: 300, size: 8, color: 'black', bold: false },
-            dates_previsionnelles: { x: 195, y: 340, size: 8, color: 'black', bold: false }
+            dates_previsionnelles: { x: 197, y: 341.5, size: 8, color: 'black', bold: false }
         },
         page2: {
             reference_devis: { x: 224, y: 469, size: 8, color: 'black', bold: true },
             date_signature: { x: 389, y: 399, size: 8, color: 'black', bold: false },
             date_devis: { x: 248, y: 469, size: 8, color: 'black', bold: true }
         }
+    },
+    cdc: {
+    page1: {
+        prime_cee:  { x: 194, y: 675, size: 8, color: 'light_blue', bold: true },
+        // prime_cee_dup: { x: 180, y: 538, size: 7, color: 'black' }, // Position différente
+        date_devis: { x: 328, y: 372, size: 9, color: 'red' },
+        date_devis_dup: { x: 149, y: 196, size: 8, color: 'black' },
     }
+    // Ajoutez d'autres pages si nécessaire
+},
+ rapport: {
+        page1: {
+            adresse_travaux_1: { x: 9, y: 740, size: 7, color: 'black'},
+            boite_postale_1: { x: 9, y: 710, size: 7, color: 'black' },
+            adresse_travaux_2: {  x: 9, y: 725, size: 7, color: 'black' },
+            boite_postale_2: { x: 100, y: 455, size: 10, color: 'black' },
+            puissance_chaudiere: { x: 245, y: 401, size: 9, color: 'black' },
+            nombre_emetteurs: { x: 375, y: 510, size: 9, color: 'black' },
+            volume_circuit: {x: 367, y: 402, size: 9, color: 'black'  },
+            date_facture: { x: 412, y: 728, size: 8, color: 'black' },
+            // numero_facture: { x: 412, y: 728, size: 8, color: 'black'},
+            reference_devis: { x: 463, y: 707.5, size: 8, color: 'black' }
+
+        }
+    }
+
+  
+    
 };
 
-// ============================================
-// FONCTION PRINCIPALE DE GÉNÉRATION PDF AVEC CALIBRI
-// ============================================
+
+
+
+
+
+
+
+async function generateFromDynamicForm(type) {
+    try {
+        const formData = {};
+        document.querySelectorAll("#dynamic-fields input").forEach(input => {
+            formData[input.name] = input.value;
+        });
+        
+        // Liste de TOUS les types qui dépendent du devis
+        const typesDependants = ["facture", "attestation_realisation", "cdc", "rapport"];
+        
+        // Sauvegarder les données selon le type
+        if (type === 'devis') {
+            localStorage.setItem("lastDevisData", JSON.stringify(formData));
+            console.log("✅ Devis sauvegardé:", formData);
+        } 
+        else if (type === 'facture') {
+            localStorage.setItem("lastFactureData", JSON.stringify(formData));
+            console.log("✅ Facture sauvegardée:", formData);
+        }
+        
+        // Pour TOUS les types dépendants, fusionner avec les données du devis
+        if (typesDependants.includes(type)) {
+            const lastDevisData = JSON.parse(localStorage.getItem("lastDevisData") || "null");
+            const lastFactureData = JSON.parse(localStorage.getItem("lastFactureData") || "null");
+            
+            if (!lastDevisData) {
+                alert(`❌ Impossible de générer le ${type} : aucun devis trouvé !`);
+                return;
+            }
+            
+            // Fusionner les données : priorité AU FORMULAIRE, puis à la facture, puis au devis
+            let mergedData = { ...lastDevisData };
+            
+            // Ajouter les données de la facture si elles existent
+            if (lastFactureData) {
+                mergedData = { ...mergedData, ...lastFactureData };
+            }
+            
+            // Ajouter les données du formulaire (priorité maximale)
+            mergedData = { ...mergedData, ...formData };
+            
+            // Gestion spécifique par type
+            switch(type) {
+                case 'facture':
+                    // Pour la facture, garder date_facture du formulaire
+                    if (formData.date_facture) {
+                        mergedData.date_facture = formData.date_facture;
+                    }
+                    break;
+                    
+                case 'attestation_realisation':
+                    // Pour l'attestation, garder date_signature du formulaire
+                    if (formData.date_signature) {
+                        mergedData.date_signature = formData.date_signature;
+                    }
+                    break;
+                    
+                case 'cdc':
+                case 'rapport':
+                    // Pour rapport, récupérer aussi la date de facture si elle existe
+                    if (lastFactureData && lastFactureData.date_facture) {
+                        mergedData.date_facture = lastFactureData.date_facture;
+                    }
+                    break;
+            }
+            
+            await generatePdfWithPdfLib(mergedData, type);
+            return;
+        }
+        
+        // Pour le devis seul (sans fusion)
+        await generatePdfWithPdfLib(formData, type);
+        
+    } catch (error) {
+        console.error("❌ Erreur:", error);
+        alert(`❌ Erreur lors de la génération du ${type}.`);
+    }
+}
+
+
+
+
+
 async function generatePdfWithPdfLib(formData, type = null) {
     const selectedType = type || document.getElementById('selected_file_type').value;
     if (!selectedType) {
@@ -446,6 +698,13 @@ async function generatePdfWithPdfLib(formData, type = null) {
     }
 
     console.log(`=== GÉNÉRATION ${selectedType.toUpperCase()} AVEC CALIBRI ===`);
+
+    // Vérifier si PDFLib est disponible
+    if (typeof PDFLib === 'undefined') {
+        alert("❌ Erreur: PDFLib n'est pas chargé. Vérifiez votre connexion internet ou les scripts.");
+        console.error("PDFLib non défini");
+        return;
+    }
 
     // Chemins vers les fichiers Calibri LOCAUX
     const calibriUrls = {
@@ -469,12 +728,12 @@ async function generatePdfWithPdfLib(formData, type = null) {
 
         // 1. Charger le template PDF
         const existingPdf = await fetch(pdfMap[selectedType]).then(res => res.arrayBuffer());
-        const { PDFDocument, StandardFonts, rgb } = PDFLib;
         
-        // 2. Créer le document PDF avec fontkit
-        const pdfDoc = await PDFDocument.load(existingPdf);
+        // 2. Créer le document PDF avec PDFLib
+        const pdfDoc = await PDFLib.PDFDocument.load(existingPdf);
+        const { rgb } = PDFLib;
         
-        // VÉRIFIER ET ENREGISTRER FONTKIT
+        // 3. Enregistrer fontkit si disponible
         if (typeof fontkit !== 'undefined') {
             pdfDoc.registerFontkit(fontkit);
             console.log("✅ Fontkit enregistré");
@@ -484,20 +743,18 @@ async function generatePdfWithPdfLib(formData, type = null) {
         
         const pages = pdfDoc.getPages();
 
-        // 3. Charger les polices Calibri
+        // 4. Charger les polices Calibri
         console.log("🔄 Chargement des polices Calibri...");
         let calibriRegular, calibriBold;
         
         try {
             // Essayer de charger Calibri Regular
-            console.log("Tentative de chargement:", calibriUrls.regular);
             const regularResponse = await fetch(calibriUrls.regular);
             if (!regularResponse.ok) throw new Error(`Calibri Regular non trouvé (${regularResponse.status})`);
             const regularBytes = await regularResponse.arrayBuffer();
             calibriRegular = await pdfDoc.embedFont(regularBytes);
             
             // Essayer de charger Calibri Bold
-            console.log("Tentative de chargement:", calibriUrls.bold);
             const boldResponse = await fetch(calibriUrls.bold);
             if (!boldResponse.ok) throw new Error(`Calibri Bold non trouvé (${boldResponse.status})`);
             const boldBytes = await boldResponse.arrayBuffer();
@@ -507,21 +764,26 @@ async function generatePdfWithPdfLib(formData, type = null) {
             
         } catch (fontError) {
             console.warn("❌ Échec chargement Calibri:", fontError.message);
-            console.log("↪️ Utilisation d'Helvetica comme fallback");
+            console.log("↪️ Utilisation des polices standards comme fallback");
             
-            // Fallback sur Helvetica
-            calibriRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
-            calibriBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+            // Fallback sur les polices standards de PDF-Lib
+            try {
+                calibriRegular = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+                calibriBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+            } catch (fallbackError) {
+                console.error("❌ Impossible de charger les polices de fallback:", fallbackError);
+                throw new Error("Impossible de charger les polices");
+            }
         }
 
-        // 4. Récupérer les coordonnées
+        // 5. Récupérer les coordonnées
         const coords = pdfCoordinates[selectedType];
         if (!coords) {
             alert(`❌ Pas de coordonnées définies pour ${selectedType}`);
             return;
         }
 
-       // Dans la fonction generatePdfWithPdfLib, avant d'écrire le texte :
+        // 6. Écrire les données sur chaque page
         pages.forEach((page, index) => {
             const pageKey = `page${index + 1}`;
             
@@ -529,8 +791,22 @@ async function generatePdfWithPdfLib(formData, type = null) {
                 Object.entries(coords[pageKey]).forEach(([fieldName, coord]) => {
                     let value = formData[fieldName] || "";
                     
+                    // LOGIQUE DE DUPLICATION POUR CDC
+                    if (selectedType === 'cdc') {
+                        if (fieldName.endsWith('_dup') && !value) {
+                            const baseField = fieldName.replace('_dup', '');
+                            if (formData[baseField]) {
+                                value = formData[baseField];
+                            }
+                        }
+                        
+                        if (fieldName === 'date_devis_dup' && !value && formData['date_devis']) {
+                            value = formData['date_devis'];
+                        }
+                    }
+                    
                     // Si c'est prime_cee_dup mais non présent dans formData, prendre prime_cee
-                    if (fieldName === "prime_cee_dup" && !formData[fieldName] && formData["prime_cee"]) {
+                    if (fieldName === "prime_cee_dup" && !value && formData["prime_cee"]) {
                         value = formData["prime_cee"];
                     }
                     
@@ -545,36 +821,47 @@ async function generatePdfWithPdfLib(formData, type = null) {
                         
                         // Choisir la couleur
                         let color;
-                        switch(coord.color) {
+
+                        switch (coord.color) {
                             case 'white':
-                                color = rgb(1, 1, 1);
+                                color = rgb(1, 1, 1); // blanc
                                 break;
+                            case 'darkblue':
                             case 'dark_blue':
-                                color = rgb(23, 61, 215);
+                                color = rgb(7 / 255, 35 / 255, 146 / 255);
+                                break;
+                            case 'lightblue':
+                            case 'light_blue':
+                                color = rgb(135 / 255, 206 / 255, 235 / 255);
+                                break;
+                            case 'blue':
+                                color = rgb(0, 0, 1);
+                                break;
+                            case 'red':
+                                color = rgb(1, 0, 0);
+                                break;
+                            case 'green':
+                                color = rgb(0, 0.5, 0);
                                 break;
                             case 'black':
                             default:
                                 color = rgb(0, 0, 0);
                         }
-                        
-                        // Écrire le texte
-                        try {
-                            page.drawText(value, {
-                                x: coord.x,
-                                y: coord.y,
-                                size: coord.size,
-                                font: font,
-                                color: color
-                            });
-                        } catch (drawError) {
-                            console.warn(`⚠️ Erreur écriture ${fieldName}:`, drawError);
-                        }
+
+                        page.drawText(value, {
+                            x: coord.x,
+                            y: coord.y,
+                            size: coord.size || 10,
+                            font: font,
+                            color: color,
+                            opacity: 1
+                        });
                     }
                 });
             }
         });
 
-        // 6. Générer et télécharger le PDF
+        // 7. Générer et télécharger le PDF
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: "application/pdf" });
         const url = URL.createObjectURL(blob);
@@ -595,40 +882,55 @@ async function generatePdfWithPdfLib(formData, type = null) {
         setTimeout(() => URL.revokeObjectURL(url), 1000);
         
         console.log(`✅ ${selectedType.toUpperCase()} généré: ${fileName}`);
-        alert(`✅ Document généré avec succès !\n\nFichier: ${fileName}`);
         
-        // Retour à l'accueil
+        // Ajouter une notification visuelle plus agréable
+        const originalText = document.querySelector('#submit-text').textContent;
+        document.querySelector('#submit-text').innerHTML = `<i class="fas fa-check-circle mr-2"></i>Succès !`;
+        document.querySelector('#submit-text').classList.add('text-green-600');
+        
         setTimeout(() => {
-            goBackToStep1();
-        }, 1000);
+            document.querySelector('#submit-text').textContent = originalText;
+            document.querySelector('#submit-text').classList.remove('text-green-600');
+            alert(`✅ Document généré avec succès !\n\nFichier: ${fileName}`);
+            
+            // Retour à l'accueil
+            setTimeout(() => {
+                goBackToStep1();
+            }, 500);
+        }, 1500);
 
     } catch (error) {
         console.error("❌ ERREUR:", error);
-        alert(`❌ Erreur lors de la génération du ${selectedType}.\n\nDétails: ${error.message}`);
-    } finally {
+        
+        // Message d'erreur plus détaillé
+        let errorMessage = `Erreur lors de la génération du ${selectedType}.\n`;
+        if (error.message.includes('fetch')) {
+            errorMessage += "Vérifiez que le template PDF existe dans le dossier PDFS/";
+        } else if (error.message.includes('font')) {
+            errorMessage += "Problème avec les polices Calibri";
+        } else {
+            errorMessage += `Détails: ${error.message}`;
+        }
+        
+        alert(errorMessage);
+        
         // Restaurer le bouton
         const submitBtn = document.getElementById('submitBtn');
         if (submitBtn) submitBtn.disabled = false;
         const submitText = document.querySelector('#submit-text');
-        if (submitText) submitText.textContent = "Ajouter le fichier";
+        if (submitText) {
+            submitText.textContent = "Ajouter le fichier";
+            submitText.classList.remove('text-green-600');
+        }
     }
 }
 
-// ============================================
-// FONCTIONS UTILITAIRES
-// ============================================
-function formatDateFR(dateStr) {
-    if (!dateStr) return "";
-    
-    if (dateStr.includes("-")) {
-        const parts = dateStr.split("-");
-        if (parts.length === 3) {
-            return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-    }
-    
-    return dateStr;
-}
+
+
+
+
+
+
 
 async function generateFromDynamicForm(type) {
     try {
@@ -637,18 +939,101 @@ async function generateFromDynamicForm(type) {
             formData[input.name] = input.value;
         });
         
+        // Liste de TOUS les types qui dépendent du devis
+        const typesDependants = ["facture", "attestation_realisation", "cdc", "rapport"];
+        
+        // Sauvegarder les données du devis
         if (type === 'devis') {
             localStorage.setItem("lastDevisData", JSON.stringify(formData));
-            console.log("Devis sauvegardé:", formData);
+            console.log("✅ Devis sauvegardé:", formData);
         }
         
+        // Pour TOUS les types dépendants, fusionner avec les données du devis
+        if (typesDependants.includes(type)) {
+            const lastDevisData = JSON.parse(localStorage.getItem("lastDevisData") || "null");
+            if (lastDevisData) {
+                // Fusionner les données : priorité AU FORMULAIRE, puis au devis
+                const mergedData = { ...lastDevisData, ...formData };
+                
+                // Gestion spécifique par type
+                switch(type) {
+                    case 'facture':
+                        // Pour la facture, garder date_facture du formulaire
+                        if (formData.date_facture) {
+                            mergedData.date_facture = formData.date_facture;
+                        }
+                        break;
+                        
+                    case 'attestation_realisation':
+                        // Pour l'attestation, garder date_signature du formulaire
+                        if (formData.date_signature) {
+                            mergedData.date_signature = formData.date_signature;
+                        }
+                        break;
+                        
+                    case 'cdc':
+                        // Pour CDC, pas de traitement spécial
+                        break;
+                        
+                    case 'rapport':
+                        // Pour rapport, pas de traitement spécial
+                        break;
+                }
+                
+                console.log(`🔗 Données fusionnées ${type}:`, mergedData);
+                await generatePdfWithPdfLib(mergedData, type);
+                return;
+            } else {
+                alert(`❌ Impossible de générer le ${type} : aucun devis trouvé !`);
+                return;
+            }
+        }
+        
+        // Pour le devis seul (sans fusion)
         await generatePdfWithPdfLib(formData, type);
         
     } catch (error) {
-        console.error("Erreur:", error);
-        alert("❌ Erreur lors de la génération.");
+        console.error("❌ Erreur:", error);
+        alert(`❌ Erreur lors de la génération du ${type}.`);
     }
 }
+
+
+function autoFillFromLastDevis(type) {
+    const lastDevisData = JSON.parse(localStorage.getItem("lastDevisData"));
+    if (!lastDevisData) return null;
+    
+    // Pour la facture, on copie tout sauf la date
+    const factureData = { ...lastDevisData };
+    
+    // On garde la date_facture saisie par l'utilisateur
+    if (factureData.date_devis) {
+        factureData.date_facture = factureData.date_devis;
+        delete factureData.date_devis;
+    }
+    
+    return factureData;
+}
+
+
+function autoFillFacture() {
+    const lastDevisData = JSON.parse(localStorage.getItem("lastDevisData"));
+    if (!lastDevisData) {
+        alert("Aucun devis trouvé !");
+        return;
+    }
+    
+    // Remplir tous les champs sauf date_facture
+    document.querySelectorAll("#dynamic-fields input").forEach(input => {
+        if (input.name !== "date_facture" && lastDevisData[input.name]) {
+            input.value = lastDevisData[input.name];
+        }
+    });
+    
+    alert("✅ Données du devis importées ! Vérifiez la date de facture.");
+}
+
+
 
 function createDevisFirst() {
     document.querySelector('.file-option[data-value="devis"]').click();
@@ -756,4 +1141,173 @@ async function testCalibri() {
     } catch (error) {
         console.error("Erreur test:", error);
     }
+}
+
+
+
+
+function reimportAllDevisData(type) {
+    const lastDevisData = JSON.parse(localStorage.getItem("lastDevisData"));
+    if (!lastDevisData) {
+        alert("❌ Aucun devis trouvé !");
+        return;
+    }
+    
+    // Déterminer quels champs ne pas écraser selon le type
+    let excludedFields = [];
+    switch(type) {
+        case 'facture':
+            excludedFields = ['date_facture'];
+            break;
+        case 'attestation_realisation':
+            excludedFields = ['date_signature'];
+            break;
+        case 'cdc':
+        case 'rapport':
+            excludedFields = []; // Tous les champs peuvent être écrasés
+            break;
+    }
+    
+    // Remplir tous les champs sauf ceux exclus
+    document.querySelectorAll("#dynamic-fields input").forEach(input => {
+        if (lastDevisData[input.name] && !excludedFields.includes(input.name)) {
+            input.value = lastDevisData[input.name];
+        }
+    });
+    
+    alert(`✅ Données du devis réimportées (sauf ${excludedFields.join(', ') || 'aucun champ exclu'}) !`);
+}
+
+function autoFillFromDevis(type) {
+    const lastDevisData = JSON.parse(localStorage.getItem("lastDevisData"));
+    if (!lastDevisData) {
+        alert("❌ Aucun devis trouvé !");
+        return;
+    }
+    
+    // Déterminer quels champs sont spécifiques au type
+    let specificFields = [];
+    switch(type) {
+        case 'facture':
+            specificFields = ['date_facture'];
+            break;
+        case 'attestation_realisation':
+            specificFields = ['date_signature'];
+            break;
+    }
+    
+    // Remplir tous les champs sauf ceux spécifiques
+    document.querySelectorAll("#dynamic-fields input").forEach(input => {
+        if (lastDevisData[input.name] && !specificFields.includes(input.name)) {
+            input.value = lastDevisData[input.name];
+        }
+    });
+    
+    alert(`✅ Données du devis importées pour le ${type} !`);
+}
+
+
+
+
+function checkDevisDependencies() {
+    console.log("=== ÉTAT DES DÉPENDANCES DEVIS ===");
+    
+    const lastDevisData = JSON.parse(localStorage.getItem("lastDevisData"));
+    
+    if (!lastDevisData) {
+        console.log("❌ AUCUN DEVIS SAUVEGARDÉ");
+        return false;
+    }
+    
+    console.log("✅ Devis sauvegardé:", lastDevisData.reference_devis);
+    
+    // Vérifier quels champs sont disponibles
+    const allFields = new Set();
+    Object.values(fileForms).forEach(form => {
+        form.forEach(field => {
+            allFields.add(field.name);
+        });
+    });
+    
+    console.log("📊 Champs disponibles dans le devis:");
+    allFields.forEach(field => {
+        const hasField = lastDevisData.hasOwnProperty(field);
+        console.log(`  ${field}: ${hasField ? '✅ ' + lastDevisData[field] : '❌ Absent'}`);
+    });
+    
+    return true;
+}
+
+
+function checkDocumentDependencies() {
+    console.log("=== ÉTAT DES DÉPENDANCES ===");
+    
+    const lastDevis = JSON.parse(localStorage.getItem('lastDevisData'));
+    const lastFacture = JSON.parse(localStorage.getItem('lastFactureData'));
+    
+    console.log("Devis:", lastDevis ? "✅ Présent" : "❌ Absent");
+    console.log("Facture:", lastFacture ? "✅ Présente" : "❌ Absente");
+    
+    if (lastFacture) {
+        console.log("📊 Données facture disponibles:");
+        console.log("- Numéro:", lastFacture.numero_facture);
+        console.log("- Date:", lastFacture.date_facture);
+        console.log("- Puissance:", lastFacture.puissance_chaudiere);
+        console.log("- Émetteurs:", lastFacture.nombre_emetteurs);
+        console.log("- Volume:", lastFacture.volume_circuit);
+    }
+    
+    return { hasDevis: !!lastDevis, hasFacture: !!lastFacture };
+}
+
+
+
+
+
+function reimportAllData(type) {
+    const lastDevisData = JSON.parse(localStorage.getItem("lastDevisData"));
+    const lastFactureData = JSON.parse(localStorage.getItem("lastFactureData"));
+    
+    if (!lastDevisData) {
+        alert("❌ Aucun devis trouvé !");
+        return;
+    }
+    
+    // Déterminer quels champs ne pas écraser selon le type
+    let excludedFields = [];
+    switch(type) {
+        case 'facture':
+            excludedFields = ['date_facture'];
+            break;
+        case 'attestation_realisation':
+            excludedFields = ['date_signature'];
+            break;
+        case 'cdc':
+        case 'rapport':
+            excludedFields = []; // Tous les champs peuvent être écrasés
+            break;
+    }
+    
+    // Remplir tous les champs sauf ceux exclus
+    document.querySelectorAll("#dynamic-fields input").forEach(input => {
+        // 1. Essayer avec les données de facture (pour le rapport)
+        if (type === 'rapport' && input.name === "date_facture" && lastFactureData && lastFactureData[input.name]) {
+            input.value = lastFactureData[input.name];
+            console.log(`Rempli ${input.name} depuis facture: ${input.value}`);
+        }
+        // 2. Essayer avec les données du devis
+        else if (lastDevisData[input.name] && !excludedFields.includes(input.name)) {
+            input.value = lastDevisData[input.name];
+            console.log(`Rempli ${input.name} depuis devis: ${input.value}`);
+        }
+    });
+    
+    let message = "✅ Données réimportées !";
+    if (type === 'rapport' && lastFactureData) {
+        message += "\n- Date de facture importée depuis la facture";
+    } else if (type === 'rapport' && !lastFactureData) {
+        message += "\n⚠️ Aucune facture trouvée (date de facture vide)";
+    }
+    
+    alert(message);
 }
