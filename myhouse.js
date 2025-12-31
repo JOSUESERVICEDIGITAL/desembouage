@@ -1,5 +1,5 @@
 function getFieldValue(fieldName, formData) {
-    // OPTIMISATION : Utiliser un cache pour éviter les recherches répétées
+    
     if (!window.myhouseFieldCache) {
         window.myhouseFieldCache = new Map();
     }
@@ -30,7 +30,7 @@ function getFieldValue(fieldName, formData) {
         'nombre_logements': 'nombre_logements',
         'nombre_logements_dup': 'nombre_logements',
         
-        // Spécifique au CDC
+      
         'date_cdc': 'date_devis',
         'date_cdc_dup': 'date_devis',
         'prime_cee_cdc': 'prime_cee'
@@ -39,7 +39,7 @@ function getFieldValue(fieldName, formData) {
     const actualField = fieldMapping[fieldName] || fieldName;
     const value = formData[actualField] || "";
     
-    // Mettre en cache
+
     window.myhouseFieldCache.set(cacheKey, value);
     
     return value;
@@ -49,20 +49,18 @@ function getFieldValue(fieldName, formData) {
 
 
 
-// ============================================
-// VARIABLES POUR CALIBRI MYHOUSE
-// ============================================
+
 let myhouseSelectedFileType = '';
 const myhousePdfCache = new Map();
 
-// Chemins vers les fichiers Calibri LOCAUX pour MYHOUSE
+
 const myhouseCalibriUrls = {
-    regular: "./fonts/calibri-regular.ttf",        // Même dossier que script.js
-    bold: "./fonts/calibri-bold.ttf"      // Même dossier que script.js
+    regular: "./fonts/calibri-regular.ttf", 
+    bold: "./fonts/calibri-bold.ttf"      
 };
 
 
-
+let myhouseSelectedRapportTemplate = 'default'; // 'virax' ou 'kiloutou'
 
 
 
@@ -225,7 +223,6 @@ function loadMyhouseForm(type) {
         return;
     }
 
-    // Afficher seulement le tableau avec les données du devis
     const devisData = JSON.parse(lastDevisData);
     
     container.innerHTML = `
@@ -278,7 +275,6 @@ function loadMyhouseForm(type) {
 
     `;
 
-    // Bouton de génération seulement (pas de formulaire)
     container.innerHTML += `
         <div class="pt-4 border-t border-gray-200">
             <button type="button"
@@ -437,16 +433,16 @@ function loadMyhouseForm(type) {
         try {
             factureData = JSON.parse(lastFactureData);
             
-            container.innerHTML = `
-                <div class="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-xl">
+           container.innerHTML = `
+                <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
                     <div class="flex items-start gap-3">
-                        <i class="fas fa-info-circle text-purple-600 text-xl mt-1"></i>
+                        <i class="fas fa-info-circle text-green-600 text-xl mt-1"></i>
                         <div>
-                            <h4 class="font-bold text-purple-700 mb-2">Informations automatiques importées depuis la facture</h4>
-                            <p class="text-purple-600 mb-3">
+                            <h4 class="font-bold text-green-700 mb-2">Informations automatiques importées depuis la facture</h4>
+                            <p class="text-green-600 mb-3">
                                 Ces informations sont automatiquement récupérées depuis la facture MYHOUSE :
                             </p>
-                            <div class="grid grid-cols-2 gap-3 text-sm bg-white p-3 rounded-lg border">
+                            <div class="grid grid-cols-2 gap-3 text-sm bg-white p-3 rounded-lg border border-gray-200">
                                 <div class="text-gray-600">Référence facture:</div>
                                 <div class="font-medium">${factureData.reference_facture || 'Non spécifié'}</div>
                                 <div class="text-gray-600">Date facture:</div>
@@ -460,13 +456,13 @@ function loadMyhouseForm(type) {
                                 <div class="text-gray-600">Référence devis:</div>
                                 <div class="font-medium">${factureData.reference_devis || 'Non spécifié'}</div>
                             </div>
-                            <p class="text-xs text-purple-500 mt-2">
+                            <p class="text-xs text-green-500 mt-2">
                                 Ces données seront automatiquement incluses dans le rapport.
                             </p>
                         </div>
                     </div>
                 </div>
-            `;
+    `;
 
             myhouseFileForms[type].forEach(field => {
                 const placeholder = field.example || "";
@@ -488,21 +484,67 @@ function loadMyhouseForm(type) {
                     </label>
                 `;
             });
-
-            container.innerHTML += `
-                <div class="pt-4 border-t border-gray-200">
-                    <button type="button"
-                        onclick="generateMyhouseRapport()"
-                        class="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-purple-800 hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 w-full">
-                        <i class="fas fa-file-alt mr-2"></i>
-                        📄 Générer le Rapport MYHOUSE
-                    </button>
-                    <p class="text-xs text-gray-500 text-center mt-2">
-                        Cliquez pour générer le rapport avec toutes les informations importées de la facture
-                    </p>
+        container.innerHTML += `
+            <div class="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                <h4 class="font-bold text-blue-800 mb-3">
+                    <i class="fas fa-file-alt mr-2"></i>
+                    📋 Choix du modèle de rapport
+                </h4>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Option VIRAX -->
+                    <div class="flex items-center p-4 bg-white border-2 border-gray-300 rounded-xl hover:border-green-400 cursor-pointer transition-all duration-200">
+                        <input type="radio" id="template_virax" name="rapport_template" value="virax" checked class="mr-4 w-5 h-5 text-green-600">
+                        <label for="template_virax" class="flex-1 cursor-pointer">
+                            <div class="font-bold text-gray-800">Rectangle VIRAX</div>
+                            <div class="text-sm text-gray-600 mt-1">Template standard avec mise en page VIRAX</div>
+                            <div class="text-xs text-green-600 font-medium mt-2">
+                                <i class="fas fa-file-pdf mr-1"></i>
+                                Utilise : rapport_myhouse_virax.pdf
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Option Kiloutou -->
+                    <div class="flex items-center p-4 bg-white border-2 border-gray-300 rounded-xl hover:border-blue-400 cursor-pointer transition-all duration-200">
+                        <input type="radio" id="template_kiloutou" name="rapport_template" value="kiloutou" class="mr-4 w-5 h-5 text-blue-600">
+                        <label for="template_kiloutou" class="flex-1 cursor-pointer">
+                            <div class="font-bold text-gray-800">Rectangle Kiloutou</div>
+                            <div class="text-sm text-gray-600 mt-1">Template alternatif avec mise en page Kiloutou</div>
+                            <div class="text-xs text-blue-600 font-medium mt-2">
+                                <i class="fas fa-file-pdf mr-1"></i>
+                                Utilise : myhouse_rapport_kiloutou.pdf
+                            </div>
+                        </label>
+                    </div>
                 </div>
-            `;
+                
+                <!-- Note d'information -->
+                <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div class="flex items-start gap-2">
+                        <i class="fas fa-info-circle text-yellow-600 mt-1"></i>
+                        <p class="text-yellow-700 text-sm">
+                            <strong>Note :</strong> Les deux templates utilisent les mêmes données, seule la mise en page diffère.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
 
+
+container.innerHTML += `
+    <div class="pt-4 border-t border-gray-200">
+        <button type="button"
+            onclick="generateMyhouseRapport()"
+            class="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-semibold hover:from-green-700 hover:to-green-800 hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 w-full">
+            <i class="fas fa-file-alt mr-2"></i>
+            📄 Générer le Rapport MYHOUSE
+        </button>
+        <p class="text-xs text-gray-500 text-center mt-2">
+            Cliquez pour générer le rapport avec toutes les informations importées de la facture
+        </p>
+    </div>
+`;
             document.getElementById("dynamic-form").classList.remove("hidden");
             document.getElementById('submitBtn').disabled = true;
 
@@ -854,9 +896,9 @@ async function generateMyhouseAttestationRealisation() {
             puissance_nominale: devisData.puissance_nominale || "",
             nombre_emetteurs: devisData.nombre_emetteurs || "",
             volume_total: devisData.volume_total || "",
-            // CORRECTION : Ces champs doivent provenir du devis, pas de valeurs par défaut
-            zone_climatique: devisData.zone_climatique || "", // Doit être saisi dans le devis
-            date_travaux: devisData.date_travaux || "", // Doit être saisi dans le devis
+          
+            zone_climatique: devisData.zone_climatique || "", 
+            date_travaux: devisData.date_travaux || "", 
             nombre_batiments: devisData.nombre_batiments || "",
             details_batiment: devisData.details_batiment || "",
             
@@ -1057,7 +1099,7 @@ async function generateMyhouseFacture() {
 }
 
 async function generateMyhouseRapport() {
-    try {
+   try {
         const formData = {};
         document.querySelectorAll("#dynamic-fields input").forEach(input => {
             formData[input.name] = input.value;
@@ -1075,6 +1117,15 @@ async function generateMyhouseRapport() {
             alert("❌ Veuillez remplir les champs requis du rapport (adresse ligne 1 et boîte postale ligne 1).");
             return;
         }
+        
+      
+        const templateSelection = document.querySelector('input[name="rapport_template"]:checked');
+        if (!templateSelection) {
+            alert("❌ Veuillez sélectionner un modèle de rapport (VIRAX ou Kiloutou).");
+            return;
+        }
+        
+        myhouseSelectedRapportTemplate = templateSelection.value;
         
         let referenceRapport = "";
         if (factureData.reference_facture) {
@@ -1098,14 +1149,20 @@ async function generateMyhouseRapport() {
             ...formData,
             
             reference_rapport: referenceRapport,
-            date_rapport: factureData.date_facture || new Date().toISOString().split('T')[0]
+            date_rapport: factureData.date_facture || new Date().toISOString().split('T')[0],
+            
+           
+            selected_template: myhouseSelectedRapportTemplate
         };
         
         console.log("📊 Données du rapport MYHOUSE:", rapportData);
+        console.log("🎯 Template sélectionné:", myhouseSelectedRapportTemplate);
         
-        await generateMyhousePdf(rapportData, 'rapport');
         
-        alert("✅ Rapport MYHOUSE généré avec succès !\n" +
+        await generateMyhousePdf(rapportData, 'rapport', myhouseSelectedRapportTemplate);
+        
+        let templateName = myhouseSelectedRapportTemplate === 'virax' ? 'VIRAX' : 'Kiloutou';
+        alert(`✅ Rapport MYHOUSE (${templateName}) généré avec succès !\n` +
               `Référence: ${referenceRapport}\n` +
               `Basé sur la facture: ${factureData.reference_facture || 'Non spécifiée'}\n` +
               `Date: ${rapportData.date_rapport || 'Non spécifiée'}`);
@@ -1120,7 +1177,7 @@ async function generateMyhouseRapport() {
 
 async function generateMyhouseCdc() {
     try {
-        // Récupérer les données du devis depuis localStorage
+        
         const lastDevisData = localStorage.getItem("lastMyhouseDevisData");
         if (!lastDevisData) {
             alert("❌ Aucun devis MYHOUSE trouvé. Veuillez d'abord créer un devis.");
@@ -1129,14 +1186,14 @@ async function generateMyhouseCdc() {
         
         const devisData = JSON.parse(lastDevisData);
         
-        // Créer les données du CDC (juste les données du devis, pas de formulaire)
+       
         const cdcData = {
-            // Champs importés du devis
+            
             'prime_cee': devisData.prime_cee || "",
             'date_devis': devisData.date_devis || "",
           
             
-            // Pour le mapping des duplications dans le CDC
+           
            
             'date_cdc': devisData.date_devis || "",
             'date_cdc_dup': devisData.date_devis || "",
@@ -1149,7 +1206,7 @@ async function generateMyhouseCdc() {
         console.log("📍 Date (position 1):", cdcData.date_cdc);
         console.log("📍 Date (position 2 - dupliquée):", cdcData.date_cdc_dup);
         
-        // Générer le PDF
+       
         await generateMyhousePdf(cdcData, 'cdc');
         
         alert("✅ Cahier des Charges MYHOUSE généré avec succès !\n" +
@@ -1163,24 +1220,25 @@ async function generateMyhouseCdc() {
     }
 }
 
-// ============================================
-// FONCTION PRINCIPALE MYHOUSE AVEC CALIBRI
-// ============================================
-async function generateMyhousePdf(formData, type) {
-    // Validation des données
+
+async function generateMyhousePdf(formData, type, template = 'default') {
+    
     if (!formData || typeof formData !== 'object') {
         console.error("❌ Données MYHOUSE invalides");
         alert("❌ Les données du formulaire sont invalides.");
         return;
     }
     
+   
     const myhousePdfMap = {
         attestation_signataire: "PDFS/myhouse_attestation_signataire.pdf",
         attestation_realisation: "PDFS/myhouse_attestation_realisation.pdf",
         devis: "PDFS/myhouse_devis.pdf",
         facture: "PDFS/myhouse_facture.pdf",
         cdc: "PDFS/myhouse_cdc.pdf",
-        rapport: "PDFS/myhouse_rapport.pdf"
+        rapport: template === 'kiloutou' 
+            ? "PDFS/myhouse_rapport_kiloutou.pdf"  
+            : "PDFS/myhouse_rapport_virax.pdf"     
     };
 
     if (!myhousePdfMap[type]) {
@@ -1188,17 +1246,19 @@ async function generateMyhousePdf(formData, type) {
         return;
     }
 
+    console.log(`📄 Utilisation du template: ${myhousePdfMap[type]}`);
+
     try {
         console.time(`Génération PDF MYHOUSE ${type}`);
         
-        // 1. Charger le template PDF
+       
         const existingPdf = await fetch(myhousePdfMap[type]).then(res => res.arrayBuffer());
         const { PDFDocument, StandardFonts, rgb } = PDFLib;
         
-        // 2. Créer le document PDF avec fontkit
+        
         const pdfDoc = await PDFDocument.load(existingPdf);
         
-        // VÉRIFIER ET ENREGISTRER FONTKIT POUR MYHOUSE
+        
         if (typeof fontkit !== 'undefined') {
             pdfDoc.registerFontkit(fontkit);
             console.log("✅ Fontkit enregistré pour MYHOUSE");
@@ -1208,19 +1268,19 @@ async function generateMyhousePdf(formData, type) {
         
         const pages = pdfDoc.getPages();
 
-        // 3. Charger les polices Calibri pour MYHOUSE
+       
         console.log("🔄 Chargement des polices Calibri pour MYHOUSE...");
         let calibriRegular, calibriBold;
         
         try {
-            // Essayer de charger Calibri Regular
+            
             console.log("Tentative de chargement:", myhouseCalibriUrls.regular);
             const regularResponse = await fetch(myhouseCalibriUrls.regular);
             if (!regularResponse.ok) throw new Error(`Calibri Regular non trouvé (${regularResponse.status})`);
             const regularBytes = await regularResponse.arrayBuffer();
             calibriRegular = await pdfDoc.embedFont(regularBytes);
             
-            // Essayer de charger Calibri Bold
+            
             console.log("Tentative de chargement:", myhouseCalibriUrls.bold);
             const boldResponse = await fetch(myhouseCalibriUrls.bold);
             if (!boldResponse.ok) throw new Error(`Calibri Bold non trouvé (${boldResponse.status})`);
@@ -1233,12 +1293,12 @@ async function generateMyhousePdf(formData, type) {
             console.warn("❌ Échec chargement Calibri MYHOUSE:", fontError.message);
             console.log("↪️ Utilisation d'Helvetica comme fallback pour MYHOUSE");
             
-            // Fallback sur Helvetica
+           
             calibriRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
             calibriBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
         }
 
-        // 4. Récupérer les coordonnées MYHOUSE
+        
         const coords = myhousePdfCoordinates[type];
         if (!coords) {
             console.error(`Coordonnées MYHOUSE non définies pour ${type}`);
@@ -1249,7 +1309,7 @@ async function generateMyhousePdf(formData, type) {
         console.log(`=== GÉNÉRATION MYHOUSE ${type.toUpperCase()} AVEC CALIBRI ===`);
         console.log("Données MYHOUSE:", formData);
 
-        // 5. Remplir le PDF MYHOUSE avec Calibri
+        
         pages.forEach((page, index) => {
             const pageKey = `page${index + 1}`;
             
@@ -1257,16 +1317,16 @@ async function generateMyhousePdf(formData, type) {
                 Object.entries(coords[pageKey]).forEach(([fieldName, coord]) => {
                     let value = getFieldValue(fieldName, formData);
                     
-                    // Formater les dates
+                    
                     if (fieldName.includes("date") || fieldName.includes("signature")) {
                         value = formatDateFR(value);
                     }
 
                     if (value && value.trim() !== "") {
-                        // Choisir la police Calibri (bold ou regular)
+                       
                         const font = coord.bold ? calibriBold : calibriRegular;
                         
-                        // Choisir la couleur
+                       
                         let color;
                         switch(coord.color) {
                             case 'white':
@@ -1307,7 +1367,7 @@ async function generateMyhousePdf(formData, type) {
             }
         });
 
-        // 6. Générer et télécharger le PDF MYHOUSE
+       
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: "application/pdf" });
         const url = URL.createObjectURL(blob);
@@ -1315,16 +1375,16 @@ async function generateMyhousePdf(formData, type) {
         const link = document.createElement("a");
         link.href = url;
         
-        // Nom du fichier MYHOUSE
+   
         const fileName = `myhouse_${type}_${formData.reference_devis || formData.reference_facture || Date.now()}.pdf`;
         link.download = fileName;
         
-        // Ajouter au DOM, cliquer et nettoyer
+      
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         
-        // Libérer la mémoire
+       
         setTimeout(() => URL.revokeObjectURL(url), 1000);
         
         console.log(`✅ MYHOUSE ${type.toUpperCase()} généré avec Calibri: ${fileName}`);
@@ -1347,36 +1407,36 @@ async function generateMyhousePdf(formData, type) {
 const myhousePdfCoordinates = {
     devis: {
         page1: {
-            reference_devis: { x: 163, y: 767, size: 13, color: 'white', bold: true },
+            reference_devis: { x: 163, y: 767.5, size: 13, color: 'white', bold: true },
             date_devis: { x: 49, y: 752, size: 9, color: 'black' },
-            adresse_travaux: { x: 20, y: 735, size: 7, color: 'black' },
-            parcelle_cadastrale: { x: 135, y: 726, size: 7, color: 'black' },
-            numero_immatriculation: { x: 100, y: 717, size: 7, color: 'black' },
-            nombre_batiments: { x: 100, y: 708, size: 7, color: 'black' },
-            details_batiment: { x: 94, y: 699, size: 7, color: 'black' },
-            nom_residence: { x: 106, y: 690, size: 7, color: 'black' },
-            date_travaux: { x: 90, y: 680, size: 7, color: 'black' },
-            nombre_logements: { x: 390, y: 483, size: 8, color: 'red', bold: false }, 
-            nombre_logements_dup: { x: 140, y: 459, size: 8, color: 'red', bold: false }, 
-            montant_cumac: { x: 70, y: 540, size: 7, color: 'black' },
+            adresse_travaux: { x: 20, y: 735, size: 9, color: 'black' },
+            parcelle_cadastrale: { x: 100, y: 725, size: 9, color: 'black' },
+            numero_immatriculation: { x: 100, y: 716.5, size: 9, color: 'black' },
+            nombre_batiments: { x: 100, y: 707, size: 9, color: 'black' },
+            details_batiment: { x: 94, y: 699, size: 9, color: 'black' },
+            nom_residence: { x: 109, y: 689, size: 9, color: 'black' },
+            date_travaux: { x: 90, y: 680, size: 9, color: 'black' },
+            nombre_logements: { x: 390, y: 483, size: 8, color: 'black', bold: false }, 
+            nombre_logements_dup: { x: 140, y: 459, size: 8, color: 'black', bold: false }, 
+            montant_cumac: { x: 70, y: 539, size: 7, color: 'black' },
             prime_cee: { x: 66, y: 527, size: 7, color: 'black' },
             prime_cee_dup: { x: 438, y: 483, size: 7, color: 'black' },
             prime_cee_dup2: { x: 492, y: 483, size: 7, color: 'black' },
-            puissance_nominale: { x: 150, y: 470, size: 7, color: 'black' },
+            puissance_nominale: { x: 150, y: 470.5, size: 7, color: 'black' },
             nombre_emetteurs: { x: 145, y: 447, size:7, color: 'black' },
             volume_total: { x: 106, y: 423, size: 7, color: 'black' },
           
             
         },
         page2: {
-            reference_devis: { x: 178, y: 756, size: 13, color: 'white', bold: true },
+            reference_devis: { x: 178, y: 756, size: 14, color: 'white', bold: true },
            
         },
         page3: {
-            reference_devis: { x: 163, y: 706, size: 12, color: 'white', bold: true },
-            prime_cee: { x: 530, y: 158, size: 7, color: 'black' },
+            reference_devis: { x: 163, y: 706, size: 14, color: 'white', bold: true },
+            prime_cee: { x: 526, y: 158, size: 7, color: 'black' },
             prime_cee_dup: { x: 525,y: 124, size: 8, color: 'black' },
-            prime_cee_page3_dup3: { x: 175, y: 230, size: 7, color: 'black' },
+            prime_cee_page3_dup3: { x: 175, y: 230.75, size: 7, color: 'black' },
             total_tva: { x: 530, y: 146, size: 8, color: 'black' },
             total_tva_dup: { x: 529, y: 112, size: 8, color: 'olive_green' , bold: true },
             total_ttc: { x: 526, y: 135, size: 8, color: 'black', bold: true },
@@ -1384,36 +1444,36 @@ const myhousePdfCoordinates = {
     },
     facture: {
        page1: {
-            reference_devis: { x: 163, y: 767, size: 13, color: 'white', bold: true },
-            date_devis: { x: 49, y: 752, size: 9, color: 'black' },
-            adresse_travaux: { x: 20, y: 735, size: 7, color: 'black' },
-            parcelle_cadastrale: { x: 135, y: 726, size: 7, color: 'black' },
-            numero_immatriculation: { x: 100, y: 717, size: 7, color: 'black' },
-            nombre_batiments: { x: 100, y: 708, size: 7, color: 'black' },
-            details_batiment: { x: 94, y: 699, size: 7, color: 'black' },
-            nom_residence: { x: 106, y: 690, size: 7, color: 'black' },
-            date_travaux: { x: 90, y: 680, size: 7, color: 'black' },
-            nombre_logements: { x: 390, y: 483, size: 8, color: 'red', bold: false }, 
-            nombre_logements_dup: { x: 140, y: 459, size: 8, color: 'red', bold: false }, 
-            montant_cumac: { x: 70, y: 540, size: 7, color: 'black' },
+            reference_devis: { x: 180, y: 767, size: 14, color: 'white', bold: true },
+            date_facture: { x: 49, y: 752.2, size: 9, color: 'black' },
+            adresse_travaux: { x: 20, y: 734.5, size: 9, color: 'black' },
+            parcelle_cadastrale: { x: 100, y: 725, size: 9, color: 'black' },
+            numero_immatriculation: { x: 100, y: 716.5, size: 9, color: 'black' },
+            nombre_batiments: { x: 100, y: 707, size: 9, color: 'black' },
+            details_batiment: { x: 94, y: 699, size: 9, color: 'black' },
+            nom_residence: { x: 109, y: 689, size: 9, color: 'black' },
+            date_travaux: { x: 90, y: 680, size: 9, color: 'black' },
+            nombre_logements: { x: 390, y: 483, size: 8, color: 'black', bold: false }, 
+            nombre_logements_dup: { x: 140, y: 459, size: 8, color: 'black', bold: false }, 
+            montant_cumac: { x: 70, y: 539, size: 7, color: 'black' },
             prime_cee: { x: 66, y: 527, size: 7, color: 'black' },
             prime_cee_dup: { x: 438, y: 483, size: 7, color: 'black' },
             prime_cee_dup2: { x: 492, y: 483, size: 7, color: 'black' },
-            puissance_nominale: { x: 150, y: 470, size: 7, color: 'black' },
+            puissance_nominale: { x: 150, y: 470.5, size: 7, color: 'black' },
             nombre_emetteurs: { x: 145, y: 447, size:7, color: 'black' },
             volume_total: { x: 106, y: 423, size: 7, color: 'black' },
           
             
         },
         page2: {
-            reference_devis: { x: 178, y: 756, size: 13, color: 'white', bold: true },
+            reference_devis: { x: 195, y: 756, size: 14, color: 'white', bold: true },
            
         },
         page3: {
-            reference_devis: { x: 163, y: 706, size: 12, color: 'white', bold: true },
-            prime_cee: { x: 530, y: 158, size: 7, color: 'black' },
+            reference_devis: { x: 180, y: 706, size: 14, color: 'white', bold: true },
+            prime_cee: { x: 526, y: 158, size: 7, color: 'black' },
             prime_cee_dup: { x: 525,y: 124, size: 8, color: 'black' },
-            prime_cee_page3_dup3: { x: 175, y: 230, size: 7, color: 'black' },
+            prime_cee_page3_dup3: { x: 175, y: 230.75, size: 7, color: 'black' },
             total_tva: { x: 530, y: 146, size: 8, color: 'black' },
             total_tva_dup: { x: 529, y: 112, size: 8, color: 'olive_green' , bold: true },
             total_ttc: { x: 526, y: 135, size: 8, color: 'black', bold: true },
@@ -1421,30 +1481,30 @@ const myhousePdfCoordinates = {
     },
      attestation_signataire: {
         page1: {
-            nom_residence: { x: 194, y: 520.5, size: 10, color: 'black', bold: true }, // REMPLACER PDFColors.BLACK
-            adresse_travaux: { x: 88, y: 507, size: 10, color: 'black', bold: true }, // REMPLACER PDFColors.BLACK
-            numero_immatriculation: { x: 228, y: 493, size: 9, color: 'black', bold: true }, // REMPLACER PDFColors.BLACK
-            date_signature: { x: 170, y: 375, size: 8, color: 'black', bold: true } // REMPLACER PDFColors.BLACK
+            nom_residence: { x: 194, y: 520.5, size: 10, color: 'black', bold: true }, 
+            adresse_travaux: { x: 88, y: 507, size: 10, color: 'black', bold: true }, 
+            numero_immatriculation: { x: 228, y: 493, size: 9, color: 'black', bold: true }, 
+            date_signature: { x: 170, y: 375, size: 8, color: 'black', bold: true } 
         }
     },
      attestation_realisation: {
         page1: {
-            adresse_travaux: { x: 188, y: 446, size: 7, color: 'black' },
-            nombre_logements: { x: 187, y: 420, size: 7, color: 'black' },
-            puissance_nominale: { x: 187, y: 400, size: 7, color: 'black' },
-            nombre_emetteurs: { x: 187, y: 388, size: 7, color: 'black' },
-            volume_total: { x: 187, y: 368, size: 6, color: 'black' },
+            adresse_travaux: { x: 188, y: 445, size: 8, color: 'black' },
+            nombre_logements: { x: 187, y: 420, size: 8, color: 'black' },
+            puissance_nominale: { x: 187, y: 400, size: 8, color: 'black' },
+            nombre_emetteurs: { x: 187, y: 388, size: 8, color: 'black' },
+            volume_total: { x: 187, y: 368, size: 8, color: 'black' },
             zone_climatique: { x: 187, y: 358, size: 7, color: 'black' },
-            date_travaux: { x: 199, y: 345, size: 7, color: 'black' },
-            nombre_batiments: { x: 187, y: 319, size: 7, color: 'black' },
-            details_batiment: { x: 187, y: 306, size: 7, color: 'black' },
+            date_travaux: { x: 199, y: 345, size: 8, color: 'black' },
+            nombre_batiments: { x: 187, y: 319, size: 8, color: 'black' },
+            details_batiment: { x: 187, y: 306, size: 8, color: 'black' },
            
         },
         
         page2: {
             reference_devis: { x: 230, y: 469, size: 7, color: 'black', bold: true },
             date_devis: { x: 260, y: 469, size: 7, color: 'black',bold: true },
-            date_facture: { x: 390, y: 398, size: 7, color: 'black' },
+            date_signature: { x: 390, y: 398.5, size: 7, color: 'black' },
         }
     },
     cdc: {
@@ -1453,7 +1513,7 @@ const myhousePdfCoordinates = {
             'prime_cee_cdc': { x: 194, y: 675, size: 8, color: 'light_blue', bold: true },
             
            
-            'date_cdc': { x: 328, y: 371, size: 9, color: 'red' },
+            'date_cdc': { x: 326, y: 371.75, size: 8.5, color: 'red' },
             
            
             'date_cdc_dup': { x: 149, y: 196, size: 8, color: 'black' },
@@ -1463,7 +1523,7 @@ const myhousePdfCoordinates = {
         page1: {
   
             date_rapport: { x: 412, y: 728, size: 8, color: 'black' },
-            reference_facture: { x: 472, y: 707, size: 8, color: 'black' },
+            reference_facture: { x: 472, y: 707.5, size: 9, color: 'black' },
           
             
             puissance_nominale: { x: 245, y: 401, size: 9, color: 'black' },
@@ -1524,21 +1584,18 @@ async function generateMyhouseFromDynamicForm(type) {
 
 
 
-// ============================================
-// FONCTION DE TEST CALIBRI POUR MYHOUSE
-// ============================================
 async function testMyhouseCalibri() {
     console.log("🧪 Test Calibri pour MYHOUSE...");
     
     try {
-        // Tester si fontkit est disponible
+        
         if (typeof fontkit === 'undefined') {
             console.error("❌ Fontkit non chargé pour MYHOUSE !");
             alert("❌ Fontkit non chargé. Vérifie les scripts dans myhouse.html");
             return;
         }
         
-        // Tester si les fichiers Calibri existent
+        
         const test1 = await fetch('./fonts/calibri.ttf');
         const test2 = await fetch('./fonts/calibri-bold.ttf');
         
@@ -1549,7 +1606,7 @@ async function testMyhouseCalibri() {
         if (test1.ok && test2.ok) {
             alert("✅ Tous les fichiers Calibri sont présents pour MYHOUSE !");
             
-            // Tester la création d'un PDF simple
+           
             const { PDFDocument, rgb } = PDFLib;
             const pdfDoc = await PDFDocument.create();
             pdfDoc.registerFontkit(fontkit);
@@ -1580,6 +1637,16 @@ async function testMyhouseCalibri() {
     }
 }
 
-// Ajoute un bouton de test dans ton myhouse.html
-// <button onclick="testMyhouseCalibri()" class="mt-4 px-4 py-2 bg-green-600 text-white rounded">🧪 Test Calibri MYHOUSE</button>
 
+function getMyhouseTemplatePath(type, template = 'default') {
+    const templates = {
+        rapport: {
+            virax: "PDFS/myhouse_rapport_virax.pdf",
+            kiloutou: "PDFS/myhouse_rapport_kiloutou.pdf",
+            default: "PDFS/myhouse_rapport_virax.pdf"
+        },
+       
+    };
+    
+    return templates[type]?.[template] || templates[type]?.default;
+}

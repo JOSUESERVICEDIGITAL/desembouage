@@ -54,7 +54,7 @@ function updateFileOptionsForMyHouse() {
     const fileGrid = document.querySelector('.grid.grid-cols-1');
     if (fileGrid) {
         fileGrid.innerHTML = `
-            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-green-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="devis">
+            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="devis">
                 <div class="flex flex-col items-center text-center">
                     <div class="w-14 h-14 bg-green-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
                         <i class="fas fa-file-invoice-dollar text-green-600 text-2xl"></i>
@@ -64,7 +64,7 @@ function updateFileOptionsForMyHouse() {
                 </div>
             </div>
             
-            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-green-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="facture">
+            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="facture">
                 <div class="flex flex-col items-center text-center">
                     <div class="w-14 h-14 bg-green-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
                         <i class="fas fa-file-invoice text-green-600 text-2xl"></i>
@@ -74,7 +74,7 @@ function updateFileOptionsForMyHouse() {
                 </div>
             </div>
             
-            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-green-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="attestation_realisation">
+            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="attestation_realisation">
                 <div class="flex flex-col items-center text-center">
                     <div class="w-14 h-14 bg-green-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
                         <i class="fas fa-file-certificate text-green-600 text-2xl"></i>
@@ -84,7 +84,7 @@ function updateFileOptionsForMyHouse() {
                 </div>
             </div>
             
-            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-green-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="attestation_signataire">
+            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="attestation_signataire">
                 <div class="flex flex-col items-center text-center">
                     <div class="w-14 h-14 bg-green-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
                         <i class="fas fa-file-signature text-green-600 text-2xl"></i>
@@ -94,7 +94,7 @@ function updateFileOptionsForMyHouse() {
                 </div>
             </div>
             
-            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-green-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="cdc">
+            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="cdc">
                 <div class="flex flex-col items-center text-center">
                     <div class="w-14 h-14 bg-green-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
                         <i class="fas fa-clipboard-list text-green-600 text-2xl"></i>
@@ -104,7 +104,7 @@ function updateFileOptionsForMyHouse() {
                 </div>
             </div>
             
-            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-green-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="rapport">
+            <div class="file-option border-2 border-gray-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all duration-200 cursor-pointer group" data-value="rapport">
                 <div class="flex flex-col items-center text-center">
                     <div class="w-14 h-14 bg-green-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
                         <i class="fas fa-file-alt text-green-600 text-2xl"></i>
@@ -253,17 +253,6 @@ const fileForms = {
         { name: "nombre_emetteurs", label: "Nombre d'émetteurs", readonly: true },
         { name: "volume_circuit", label: "Volume circuit", readonly: true }
     ],
-
-
-
-
-
-
-
-
-
-
-
     
 };
 
@@ -443,9 +432,7 @@ function loadFormFor(type) {
     }
 }
 
-// ============================================
-// COORDONNÉES PDF AVEC CALIBRI
-// ============================================
+
 const pdfCoordinates = {
     devis: {
            page1: {

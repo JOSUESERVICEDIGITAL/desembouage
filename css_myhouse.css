@@ -1,0 +1,15 @@
+/* Style pour les boutons radio personnalisés */
+.radio-company:checked + .radio-company-label {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.radio-company-label {
+    transition: all 0.2s ease;
+}
+
+.radio-company-label:hover {
+    border-color: #93c5fd;
+    background-color: #f8fafc;
+}
