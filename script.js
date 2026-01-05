@@ -505,7 +505,7 @@ const pdfCoordinates = {
             volume_circuit: { x: 179, y: 590, size: 8, color: 'black' },
             nombre_filtres: { x: 102, y: 569, size: 8, color: 'black' },
             wh_cumac: { x: 127, y: 548, size: 8, color: 'black' },
-            prime_cee: { x: 120, y: 537.5, size: 8, color: 'black' }
+            montant_ht: { x: 120, y: 537.5, size: 8, color: 'black' }
         },
         page3: {
             reference_devis: { x: 216, y: 733, size: 12, color: 'white', bold: true },
@@ -514,7 +514,7 @@ const pdfCoordinates = {
         page4: {
             reference_devis: { x: 216, y: 733, size: 12, color: 'white', bold: true },
             date_devis: { x: 139, y: 718, size: 12, color: 'white', bold: true },
-            montant_ht: { x: 528, y: 383, size: 8, color: 'darkblue', bold: true },
+            prime_cee_dup: { x: 528, y: 383, size: 8, color: 'darkblue', bold: true },
             montant_tva: { x: 526, y: 371, size: 8, color: 'darkblue', bold: true },
             montant_ttc: { x: 526, y: 361, size: 8, color: 'darkblue', bold: true },
             prime_cee: { x: 528, y: 350, size: 8, color: 'black', bold: false },
@@ -551,14 +551,14 @@ const pdfCoordinates = {
         page2: {
             reference_devis: { x: 214, y: 733, size: 12, color: 'white', bold: true },
             date_facture: { x: 139, y: 718, size: 12, color: 'white', bold: true }, // Remplace date_devis
-             puissance_chaudiere: { x: 198, y: 632, size: 8, color: 'black' },
+            puissance_chaudiere: { x: 198, y: 632, size: 8, color: 'black' },
             zone_climatique: { x: 135, y: 579.5, size: 8, color: 'black' },
             nombre_logements: { x: 189, y: 622, size: 8, color: 'black' },
             nombre_emetteurs: { x: 195, y: 611, size: 8, color: 'black' },
             volume_circuit: { x: 179, y: 590, size: 8, color: 'black' },
             nombre_filtres: { x: 102, y: 569, size: 8, color: 'black' },
             wh_cumac: { x: 127, y: 548, size: 8, color: 'black' },
-            prime_cee: { x: 120, y: 538, size: 8, color: 'black' }
+            montant_ht: { x: 120, y: 538, size: 8, color: 'black' }
         },
         page3: {
             reference_devis: { x: 214, y: 733, size: 12, color: 'white', bold: true },
@@ -567,7 +567,7 @@ const pdfCoordinates = {
         page4: {
             reference_devis: { x: 214, y: 733, size: 12, color: 'white', bold: true },
             date_facture: { x: 139, y: 718, size: 12, color: 'white', bold: true }, // Remplace date_devis
-            montant_ht: { x: 522, y: 383, size: 8, color: 'darkblue', bold: true },
+           somme: { x: 526, y: 383, size: 8, color: 'darkblue', bold: true },
             montant_tva: { x: 522, y: 371, size: 8, color: 'darkblue', bold: true },
             montant_ttc: { x: 522, y: 361, size: 8, color: 'darkblue', bold: true },
             prime_cee: { x: 522, y: 350, size: 8, color: 'darkblue', bold: true },
