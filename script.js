@@ -5,17 +5,17 @@ const pdfCache = new Map();
 
 
 function selectDossier(dossier) {
-    const user = JSON.parse(localStorage.getItem('current_user'));
+    // const user = JSON.parse(localStorage.getItem('current_user'));
     
-    if (!user) {
-        alert("🔒 Veuillez vous connecter pour accéder aux dossiers.");
-        return;
-    }
+    // if (!user) {
+    //     alert("🔒 Veuillez vous connecter pour accéder aux dossiers.");
+    //     return;
+    // }
     
-    if (!user.user.validated) {
-        alert("⚠️ Votre compte n'est pas encore validé.");
-        return;
-    }
+    // if (!user.user.validated) {
+    //     alert("⚠️ Votre compte n'est pas encore validé.");
+    //     return;
+    // }
     
     selectedDossier = dossier;
     
