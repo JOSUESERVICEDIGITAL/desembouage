@@ -46,6 +46,34 @@ function getFieldValue(fieldName, formData) {
 }
 
 
+// Fonction pour ajuster la position X selon le nombre de chiffres
+function adjustXForAmount(value, baseX) {
+    // Vérifier si c'est un nombre
+    const num = parseFloat(value.toString().replace(/[^\d,.-]/g, '').replace(',', '.'));
+    
+    if (isNaN(num)) return { x: baseX, digits: 0 };
+    
+    // Obtenir la partie entière
+    const integerPart = Math.floor(Math.abs(num));
+    const digitCount = integerPart.toString().length;
+    
+    let adjustedX = baseX;
+    
+    // Logique d'ajustement
+    if (digitCount === 5) {
+        adjustedX = 526; // Pour 5 chiffres (ex: 12345)
+    } else if (digitCount === 4) {
+        adjustedX = 528; // Pour 4 chiffres (ex: 1234)
+    } else if (digitCount === 3) {
+        adjustedX = 530; // Pour 3 chiffres (ex: 123)
+    } else if (digitCount === 2) {
+        adjustedX = 532; // Pour 2 chiffres (ex: 12)
+    } else if (digitCount === 1) {
+        adjustedX = 534; // Pour 1 chiffre (ex: 1)
+    }
+    
+    return { x: adjustedX, digits: digitCount };
+}
 
 
 
@@ -488,7 +516,7 @@ function loadMyhouseForm(type) {
             <div class="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
                 <h4 class="font-bold text-blue-800 mb-3">
                     <i class="fas fa-file-alt mr-2"></i>
-                    📋 Choix du modèle de rapport
+                     Choix du modèle de rapport
                 </h4>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1311,61 +1339,79 @@ async function generateMyhousePdf(formData, type, template = 'default') {
 
         
         pages.forEach((page, index) => {
-            const pageKey = `page${index + 1}`;
+    const pageKey = `page${index + 1}`;
+    
+    if (coords[pageKey]) {
+        Object.entries(coords[pageKey]).forEach(([fieldName, coord]) => {
+            let value = getFieldValue(fieldName, formData);
             
-            if (coords[pageKey]) {
-                Object.entries(coords[pageKey]).forEach(([fieldName, coord]) => {
-                    let value = getFieldValue(fieldName, formData);
+            // Ajuster la position X pour les montants (droite alignée)
+            let adjustedX = coord.x;
+            
+            // Appliquer l'ajustement pour les montants des devis et factures MYHOUSE
+            if ((type === 'devis' || type === 'facture') && pageKey === 'page3') {
+                // Champs de montants pour MYHOUSE (différents d'Energinova)
+                const amountFields = ['prime_cee', 'total_tva', 'total_ttc', 'montant_cumac'];
+                
+                if (amountFields.includes(fieldName) && value) {
+                    // Récupérer à la fois la position X et le nombre de chiffres
+                    const adjustmentResult = adjustXForAmount(value, coord.x);
+                    adjustedX = adjustmentResult.x;
+                    const digitCount = adjustmentResult.digits;
                     
-                    
-                    if (fieldName.includes("date") || fieldName.includes("signature")) {
-                        value = formatDateFR(value);
-                    }
+                    console.log(`Ajustement MYHOUSE ${type} - ${fieldName}: ${value} → ${digitCount} chiffres → x=${adjustedX}`);
+                }
+            }
+            
+            // Formater les dates si nécessaire
+            if (fieldName.includes("date") || fieldName.includes("signature")) {
+                value = formatDateFR(value);
+            }
 
-                    if (value && value.trim() !== "") {
-                       
-                        const font = coord.bold ? calibriBold : calibriRegular;
-                        
-                       
-                        let color;
-                        switch(coord.color) {
-                            case 'white':
-                                color = rgb(1, 1, 1);
-                                break;
-                            case 'dark_green':
-                                color = rgb(0, 0.4, 0.2);
-                                break;
-                            case 'olive_green':
-                                color = rgb(0.45, 0.50, 0.19);
-                                break;
-                            case 'light_blue':
-                                color = rgb(0.4, 0.7, 1);
-                                break;
-                            case 'red':
-                                color = rgb(1, 0, 0);
-                                break;
-                            case 'black':
-                            default:
-                                color = rgb(0, 0, 0);
-                        }
-                        
-                        console.log(`Écriture MYHOUSE ${type} - ${fieldName}: "${value}" à (${coord.x}, ${coord.y}) avec Calibri`);
-                        
-                        try {
-                            page.drawText(value, {
-                                x: coord.x,
-                                y: coord.y,
-                                size: coord.size,
-                                font: font,
-                                color: color
-                            });
-                        } catch (error) {
-                            console.error(`Erreur écriture MYHOUSE ${fieldName}:`, error);
-                        }
-                    }
-                });
+            if (value && value.trim() !== "") {
+                // Choisir la police
+                const font = coord.bold ? calibriBold : calibriRegular;
+                
+                // Choisir la couleur
+                let color;
+                switch(coord.color) {
+                    case 'white':
+                        color = rgb(1, 1, 1);
+                        break;
+                    case 'dark_green':
+                        color = rgb(0, 0.4, 0.2);
+                        break;
+                    case 'olive_green':
+                        color = rgb(0.45, 0.50, 0.19);
+                        break;
+                    case 'light_blue':
+                        color = rgb(0.4, 0.7, 1);
+                        break;
+                    case 'red':
+                        color = rgb(1, 0, 0);
+                        break;
+                    case 'black':
+                    default:
+                        color = rgb(0, 0, 0);
+                }
+                
+                console.log(`Écriture MYHOUSE ${type} - ${fieldName}: "${value}" à (${adjustedX}, ${coord.y}) avec Calibri`);
+                
+                try {
+                    page.drawText(value, {
+                        x: adjustedX,
+                        y: coord.y,
+                        size: coord.size,
+                        font: font,
+                        color: color
+                    });
+                } catch (error) {
+                    console.error(`Erreur écriture MYHOUSE ${fieldName}:`, error);
+                }
             }
         });
+    }
+});
 
        
         const pdfBytes = await pdfDoc.save();
@@ -1407,7 +1453,7 @@ async function generateMyhousePdf(formData, type, template = 'default') {
 const myhousePdfCoordinates = {
     devis: {
         page1: {
-            reference_devis: { x: 163, y: 767.5, size: 13, color: 'white', bold: true },
+            reference_devis: { x: 163, y: 766.8, size: 14.2, color: 'white', bold: true },
             date_devis: { x: 49, y: 752, size: 9, color: 'black' },
             adresse_travaux: { x: 20, y: 735, size: 9, color: 'black' },
             parcelle_cadastrale: { x: 100, y: 725, size: 9, color: 'black' },
@@ -1429,11 +1475,11 @@ const myhousePdfCoordinates = {
             
         },
         page2: {
-            reference_devis: { x: 178, y: 756, size: 14, color: 'white', bold: true },
+            reference_devis: { x: 178, y: 756, size: 14.2, color: 'white', bold: true },
            
         },
         page3: {
-            reference_devis: { x: 163, y: 706, size: 14, color: 'white', bold: true },
+            reference_devis: { x: 163, y: 706, size: 14.2, color: 'white', bold: true },
             prime_cee: { x: 526, y: 158, size: 7, color: 'black' },
             prime_cee_dup: { x: 525,y: 124, size: 8, color: 'black' },
             prime_cee_page3_dup3: { x: 175, y: 230.75, size: 7, color: 'black' },
@@ -1444,7 +1490,7 @@ const myhousePdfCoordinates = {
     },
     facture: {
        page1: {
-            reference_devis: { x: 180, y: 767, size: 14, color: 'white', bold: true },
+            reference_devis: { x: 180, y: 767, size: 14.2, color: 'white', bold: true },
             date_facture: { x: 49, y: 752.2, size: 9, color: 'black' },
             adresse_travaux: { x: 20, y: 734.5, size: 9, color: 'black' },
             parcelle_cadastrale: { x: 100, y: 725, size: 9, color: 'black' },
@@ -1466,11 +1512,11 @@ const myhousePdfCoordinates = {
             
         },
         page2: {
-            reference_devis: { x: 195, y: 756, size: 14, color: 'white', bold: true },
+            reference_devis: { x: 195, y: 756, size: 14.2, color: 'white', bold: true },
            
         },
         page3: {
-            reference_devis: { x: 180, y: 706, size: 14, color: 'white', bold: true },
+            reference_devis: { x: 180, y: 706, size: 14.2, color: 'white', bold: true },
             prime_cee: { x: 526, y: 158, size: 7, color: 'black' },
             prime_cee_dup: { x: 525,y: 124, size: 8, color: 'black' },
             prime_cee_page3_dup3: { x: 175, y: 230.75, size: 7, color: 'black' },
