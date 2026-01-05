@@ -4,6 +4,11 @@ let selectedFileType = '';
 const pdfCache = new Map();
 
 
+
+
+
+
+
 function selectDossier(dossier) {
     // const user = JSON.parse(localStorage.getItem('current_user'));
     
@@ -144,6 +149,12 @@ function updateFileOptionsForMyHouse() {
     }
 }
 
+
+
+
+
+
+
 function goBackToStep1() {
     selectedDossier = '';
     selectedFileType = '';
@@ -172,9 +183,40 @@ function goBackToStep1() {
     document.getElementById("dynamic-form").classList.add("hidden");
 }
 
-// ============================================
-// FORMULAIRES DYNAMIQUES
-// ============================================
+
+
+
+// Fonction pour ajuster la position X selon le nombre de chiffres
+function adjustXForAmount(value, baseX) {
+    // Vérifier si c'est un nombre
+    const num = parseFloat(value.toString().replace(/[^\d,.-]/g, '').replace(',', '.'));
+    
+    if (isNaN(num)) return { x: baseX, digits: 0 };
+    
+    // Obtenir la partie entière
+    const integerPart = Math.floor(Math.abs(num));
+    const digitCount = integerPart.toString().length;
+    
+    let adjustedX = baseX;
+    
+    // Logique d'ajustement
+    if (digitCount === 5) {
+        adjustedX = 526; // Pour 5 chiffres (ex: 12345)
+    } else if (digitCount === 4) {
+        adjustedX = 528; // Pour 4 chiffres (ex: 1234)
+    } else if (digitCount === 3) {
+        adjustedX = 530; // Pour 3 chiffres (ex: 123)
+    } else if (digitCount === 2) {
+        adjustedX = 532; // Pour 2 chiffres (ex: 12)
+    } else if (digitCount === 1) {
+        adjustedX = 534; // Pour 1 chiffre (ex: 1)
+    }
+    
+    return { x: adjustedX, digits: digitCount };
+}
+
+
+
 const fileForms = {
     attestation_signataire: [
         { name: "residence_nom", label: "Nom de la résidence / bâtiment", required: true },
@@ -221,7 +263,8 @@ const fileForms = {
         { name: "zone_climatique", label: "Zone climatique", required: true, example: "H1, H2 ou H3" },
         { name: "volume_circuit", label: "Volume total du circuit d'eau", required: true, example: "5 396 L" },
         { name: "nombre_filtres", label: "Nombre de filtres", required: true, example: "14" },
-        { name: "wh_cumac", label: "WH CUMAC", required: true, example: "1 751 400" }
+        { name: "wh_cumac", label: "WH CUMAC", required: true, example: "1 751 400" },
+        { name: "somme", label: "somme", required: true, example: "751 400" }
     ],
     
     facture: [
@@ -437,10 +480,10 @@ const pdfCoordinates = {
     devis: {
            page1: {
             reference_devis: { x: 216, y: 733, size: 12, color: 'white', bold: true },
-            date_devis: { x: 139, y: 718, size: 10.5, color: 'white', bold: true },
+            date_devis: { x: 139, y: 718, size: 12, color: 'white', bold: true },
             adresse_travaux: { x: 105, y: 505, size: 8, color: 'black' },
             numero_immatriculation: { x: 205, y: 495.5, size: 8, color: 'black' },
-            nom_residence: { x: 268, y: 495.5, size: 8, color: 'black' },
+            nom_residence: { x: 266, y: 495.5, size: 8, color: 'black' },
             zone_climatique: { x: 107, y: 485.5, size: 8, color: 'black' },
             parcelle_1: { x: 54, y: 462, size: 8, color: 'black' },
             parcelle_2: { x: 190, y: 462, size: 8, color: 'black' },
@@ -454,30 +497,32 @@ const pdfCoordinates = {
         },
         page2: {
             reference_devis: { x: 216, y: 733, size: 12, color: 'white', bold: true },
-            date_devis: { x: 139, y: 718, size: 10.5, color: 'white', bold: true },
-            puissance_chaudiere: { x: 198, y: 632, size: 7, color: 'black' },
+            date_devis: { x: 139, y: 718, size: 12, color: 'white', bold: true },
+            puissance_chaudiere: { x: 198, y: 632, size: 8, color: 'black' },
             zone_climatique: { x: 135, y: 579.5, size: 8, color: 'black' },
-            nombre_logements: { x: 189, y: 622, size: 7, color: 'black' },
-            nombre_emetteurs: { x: 195, y: 611, size: 7, color: 'black' },
-            volume_circuit: { x: 179, y: 590, size: 7, color: 'black' },
-            nombre_filtres: { x: 102, y: 569, size: 7, color: 'black' },
-            wh_cumac: { x: 127, y: 548, size: 7, color: 'black' },
-            prime_cee: { x: 120, y: 538, size: 7, color: 'black' }
+            nombre_logements: { x: 189, y: 622, size: 8, color: 'black' },
+            nombre_emetteurs: { x: 195, y: 611, size: 8, color: 'black' },
+            volume_circuit: { x: 179, y: 590, size: 8, color: 'black' },
+            nombre_filtres: { x: 102, y: 569, size: 8, color: 'black' },
+            wh_cumac: { x: 127, y: 548, size: 8, color: 'black' },
+            prime_cee: { x: 120, y: 537.5, size: 8, color: 'black' }
         },
         page3: {
             reference_devis: { x: 216, y: 733, size: 12, color: 'white', bold: true },
-            date_devis: { x: 139, y: 718, size: 10.5, color: 'white', bold: true }
+            date_devis: { x: 139, y: 718, size: 12, color: 'white', bold: true }
         },
         page4: {
             reference_devis: { x: 216, y: 733, size: 12, color: 'white', bold: true },
-            date_devis: { x: 139, y: 718, size: 10.5, color: 'white', bold: true },
-            montant_ht: { x: 522, y: 383, size: 8, color: 'darkblue', bold: true },
-            montant_tva: { x: 522, y: 371, size: 8, color: 'darkblue', bold: true },
-            montant_ttc: { x: 522, y: 361, size: 8, color: 'darkblue', bold: true },
-            prime_cee: { x: 522, y: 350, size: 8, color: 'darkblue', bold: true },
-            prime_cee_dup: { x: 78.5, y: 277.5, size: 7, color: 'black', bold: false },
-            reste_a_charge: { x: 522, y: 315, size: 8, color: 'darkblue', bold: true },
-            montant_ht_dup: { x: 77, y: 277, size: 7, color: 'black' }
+            date_devis: { x: 139, y: 718, size: 12, color: 'white', bold: true },
+            montant_ht: { x: 528, y: 383, size: 8, color: 'darkblue', bold: true },
+            montant_tva: { x: 526, y: 371, size: 8, color: 'darkblue', bold: true },
+            montant_ttc: { x: 526, y: 361, size: 8, color: 'darkblue', bold: true },
+            prime_cee: { x: 528, y: 350, size: 8, color: 'black', bold: false },
+            reste_a_charge: { x: 526, y: 315, size: 8, color: 'darkblue', bold: true },
+            // prime_cee_dup: { x: 78.5, y: 277.5, size: 7, color: 'black', bold: false },
+            // montant_ht_dup: { x: 77, y: 277, size: 7, color: 'black' },
+            somme: { x: 78, y: 277.5, size: 7, color: 'black' },
+
         },
         page5: {
             reference_devis: { x: 216, y: 733, size: 12, color: 'white', bold: true },
@@ -488,7 +533,7 @@ const pdfCoordinates = {
     facture: {
          page1: {
             reference_devis: { x: 214, y: 733.2, size: 12, color: 'white', bold: true },
-            date_facture: { x: 139, y: 718, size: 10.5, color: 'white', bold: true }, // Remplace date_devis
+            date_facture: { x: 139, y: 718, size: 12, color: 'white', bold: true }, // Remplace date_devis
             adresse_travaux: { x: 105, y: 505, size: 8, color: 'black' },
             numero_immatriculation: { x: 205, y: 495.5, size: 8, color: 'black' },
             nom_residence: { x: 268, y: 495.5, size: 8, color: 'black' },
@@ -505,30 +550,30 @@ const pdfCoordinates = {
         },
         page2: {
             reference_devis: { x: 214, y: 733, size: 12, color: 'white', bold: true },
-            date_facture: { x: 139, y: 718, size: 10.5, color: 'white', bold: true }, // Remplace date_devis
-             puissance_chaudiere: { x: 198, y: 632, size: 7, color: 'black' },
+            date_facture: { x: 139, y: 718, size: 12, color: 'white', bold: true }, // Remplace date_devis
+             puissance_chaudiere: { x: 198, y: 632, size: 8, color: 'black' },
             zone_climatique: { x: 135, y: 579.5, size: 8, color: 'black' },
-            nombre_logements: { x: 189, y: 622, size: 7, color: 'black' },
-            nombre_emetteurs: { x: 195, y: 611, size: 7, color: 'black' },
-            volume_circuit: { x: 179, y: 590, size: 7, color: 'black' },
-            nombre_filtres: { x: 102, y: 569, size: 7, color: 'black' },
-            wh_cumac: { x: 127, y: 548, size: 7, color: 'black' },
-            prime_cee: { x: 120, y: 538, size: 7, color: 'black' }
+            nombre_logements: { x: 189, y: 622, size: 8, color: 'black' },
+            nombre_emetteurs: { x: 195, y: 611, size: 8, color: 'black' },
+            volume_circuit: { x: 179, y: 590, size: 8, color: 'black' },
+            nombre_filtres: { x: 102, y: 569, size: 8, color: 'black' },
+            wh_cumac: { x: 127, y: 548, size: 8, color: 'black' },
+            prime_cee: { x: 120, y: 538, size: 8, color: 'black' }
         },
         page3: {
             reference_devis: { x: 214, y: 733, size: 12, color: 'white', bold: true },
-            date_facture: { x: 139, y: 718, size: 10.5, color: 'white', bold: true } // Remplace date_devis
+            date_facture: { x: 139, y: 718, size: 12, color: 'white', bold: true } // Remplace date_devis
         },
         page4: {
             reference_devis: { x: 214, y: 733, size: 12, color: 'white', bold: true },
-            date_facture: { x: 139, y: 718, size: 10.5, color: 'white', bold: true }, // Remplace date_devis
+            date_facture: { x: 139, y: 718, size: 12, color: 'white', bold: true }, // Remplace date_devis
             montant_ht: { x: 522, y: 383, size: 8, color: 'darkblue', bold: true },
             montant_tva: { x: 522, y: 371, size: 8, color: 'darkblue', bold: true },
             montant_ttc: { x: 522, y: 361, size: 8, color: 'darkblue', bold: true },
             prime_cee: { x: 522, y: 350, size: 8, color: 'darkblue', bold: true },
-            prime_cee_dup: { x: 78.5, y: 277.5, size: 7, color: 'black', bold: false },
             reste_a_charge: { x: 522, y: 315, size: 8, color: 'darkblue', bold: true },
-            montant_ht_dup: { x: 77, y: 277, size: 7, color: 'black' }
+            montant_ht_dup: { x: 77, y: 277, size: 7, color: 'black' },
+            prime_cee_dup: { x: 78.5, y: 277.5, size: 7, color: 'black', bold: false },
         }
     },
     
@@ -772,11 +817,28 @@ async function generatePdfWithPdfLib(formData, type = null) {
 
         // 6. Écrire les données sur chaque page
         pages.forEach((page, index) => {
-            const pageKey = `page${index + 1}`;
+        const pageKey = `page${index + 1}`;
+        
+        if (coords[pageKey]) {
+        Object.entries(coords[pageKey]).forEach(([fieldName, coord]) => {
+            let value = formData[fieldName] || "";
+
+            // Ajuster la position X pour les montants (droite alignée)
+                 let adjustedX = coord.x;
             
-            if (coords[pageKey]) {
-                Object.entries(coords[pageKey]).forEach(([fieldName, coord]) => {
-                    let value = formData[fieldName] || "";
+            // Appliquer l'ajustement pour les montants de la page 4 du devis et de la facture
+            if ((selectedType === 'devis' || selectedType === 'facture') && pageKey === 'page4') {
+                const amountFields = ['montant_ht', 'montant_tva', 'montant_ttc', 'prime_cee', 'reste_a_charge'];
+                
+                if (amountFields.includes(fieldName) && value) {
+                    // Récupérer à la fois la position X et le nombre de chiffres
+                    const adjustmentResult = adjustXForAmount(value, coord.x);
+                    adjustedX = adjustmentResult.x;
+                    const digitCount = adjustmentResult.digits;
+                    
+                    console.log(`Ajustement ${fieldName}: ${value} → ${digitCount} chiffres → x=${adjustedX}`);
+                }
+            }
                     
                     // LOGIQUE DE DUPLICATION POUR CDC
                     if (selectedType === 'cdc') {
@@ -792,7 +854,7 @@ async function generatePdfWithPdfLib(formData, type = null) {
                         }
                     }
                     
-                    // Si c'est prime_cee_dup mais non présent dans formData, prendre prime_cee
+                    
                     if (fieldName === "prime_cee_dup" && !value && formData["prime_cee"]) {
                         value = formData["prime_cee"];
                     }
@@ -803,23 +865,26 @@ async function generatePdfWithPdfLib(formData, type = null) {
                     }
                     
                     if (value && value.trim() !== "") {
-                        // Choisir la police (bold ou regular)
+                       
                         const font = coord.bold ? calibriBold : calibriRegular;
                         
                         // Choisir la couleur
                         let color;
 
-                        switch (coord.color) {
+                    switch (coord.color) {
                             case 'white':
                                 color = rgb(1, 1, 1); // blanc
                                 break;
                             case 'darkblue':
                             case 'dark_blue':
-                                color = rgb(7 / 255, 35 / 255, 146 / 255);
+                               
+                                color = rgb(0/255.0, 51/255.0, 102/255.0);
+                                
+                               
                                 break;
                             case 'lightblue':
                             case 'light_blue':
-                                color = rgb(135 / 255, 206 / 255, 235 / 255);
+                                color = rgb(135/255.0, 206/255.0, 235/255.0);
                                 break;
                             case 'blue':
                                 color = rgb(0, 0, 1);
@@ -835,14 +900,15 @@ async function generatePdfWithPdfLib(formData, type = null) {
                                 color = rgb(0, 0, 0);
                         }
 
-                        page.drawText(value, {
-                            x: coord.x,
-                            y: coord.y,
-                            size: coord.size || 10,
-                            font: font,
-                            color: color,
-                            opacity: 1
-                        });
+                        // Utiliser adjustedX au lieu de coord.x
+                page.drawText(value, {
+                    x: adjustedX,  // <-- CHANGÉ ICI
+                    y: coord.y,
+                    size: coord.size || 10,
+                    font: font,
+                    color: color,
+                    opacity: 1
+                });
                     }
                 });
             }
@@ -1298,3 +1364,25 @@ function reimportAllData(type) {
     
     alert(message);
 }
+
+
+
+function testAlignement() {
+    const tests = [
+        { value: "12345,67", expectedX: 526 },
+        { value: "1 234,56", expectedX: 528 },
+        { value: "123,45", expectedX: 530 },
+        { value: "12,34", expectedX: 532 },
+        { value: "1,23", expectedX: 534 }
+    ];
+    
+    console.log("=== TEST ALIGNEMENT MONTANTS ===");
+    tests.forEach(test => {
+        const result = adjustXForAmount(test.value, 528);
+        console.log(`${test.value} -> x=${result} (attendu: ${test.expectedX}) -> ${result === test.expectedX ? '✅' : '❌'}`);
+    });
+}
+
+// Appelez cette fonction dans la console pour tester
+
+
